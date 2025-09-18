@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Global Chat — Supabase</title>
+  <style>
+    :root { --bg:#0f172a; --panel:#111827; --accent:#22d3ee; --muted:#94a3b8; --text:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; background:linear-gradient(180deg,#0b1025,#0f172a); color:var(--text); display:flex; min-height:100vh; }
+    .container { max-width:900px; margin:0 auto; flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; }
+    header { display:flex; align-items:center; gap:10px; }
+    header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
+    header .badge { padding:4px 8px; border-radius:999px; background:#0ea5a5; font-size:12px; }
+    .card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+    #room { padding:10px 14px; display:flex; align-items:center; gap:8px; }
+    #room input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
+    #room button { padding:10px 14px; border-radius:10px; border:0; background:var(--accent); color:#001018; font-weight:700; cursor:pointer; }
+    #chat { flex:1; display:flex; min-height:0; gap:12px; }
+    #messages { flex: 1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+    .msg { padding:10px 12px; border-radius:12px; background:#0b1226; border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:6px; }
+    .meta { font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+    .me .meta strong { color:#a7f3d0; }
+    .text { line-height:1.4; white-space:pre-wrap; word-wrap:anywhere; }
+    .sys { text-align:center; font-size:12px; color:var(--muted); margin:8px 0; }
+    #composer { padding:10px; display:flex; gap:8px; }
+    #composer input[type="text"] { width:180px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
+    #composer textarea { flex:1; min-height:44px; max-height:120px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; resize:vertical; color:var(--text); }
+    #composer button { padding:10px 14px; border-radius:10px; border:0; background:var(--accent); color:#001018; font-weight:700; cursor:pointer; }
+    footer { text-align:center; font-size:12px; color:var(--muted); padding:8px 0 0; }
+    .row { display:flex; gap:12px; align-items:center; }
+    .grow { flex:1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>Global Chat — Supabase</h1>
+      <span class="badge" id="online">…</span>
+      <div class="grow"></div>
+      <span class="meta" id="status">Connecting…</span>
+    </header>
+
+    <div id="room" class="card">
+      <div class="row" style="width:100%">
+        <label class="meta" for="roomInput">Room:</label>
+        <input id="roomInput" placeholder="global" />
+        <button id="switchRoom">Join</button>
+      </div>
+    </div>
+
+    <div id="chat" class="card" style="flex-direction:column;">
+      <div id="messages"></div>
+      <div id="composer">
+        <input id="name" placeholder="Nickname" maxlength="20" />
+        <textarea id="input" placeholder="Type a message… (Shift+Enter = newline)" maxlength="300"></textarea>
+        <button id="send">Send</button>
+      </div>
+    </div>
+
+    <footer>
+      Free realtime chat powered by Supabase (Postgres + Realtime). Keep it friendly ✨
+    </footer>
+  </div>
+
+  <!-- Supabase client -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    // 1) Replace with your project values (Settings → API)
+    const SUPABASE_URL = 'https://YOUR-PROJECT-ref.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';
+
+    // 2) Choose persistence mode (true = store in Postgres + Realtime; false = ephemeral broadcast only)
+    const PERSIST = true;
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const els = {
+      status: document.getElementById('status'),
+      input: document.getElementById('input'),
+      send: document.getElementById('send'),
+      messages: document.getElementById('messages'),
+      name: document.getElementById('name'),
+      online: document.getElementById('online'),
+      roomInput: document.getElementById('roomInput'),
+      switchRoom: document.getElementById('switchRoom')
+    };
+
+    let state = {
+      room: localStorage.getItem('room') || 'global',
+      name: localStorage.getItem('nickname') || '',
+      userId: localStorage.getItem('uid') || crypto.randomUUID(),
+      presenceChannel: null,
+      dataChannel: null
+    };
+
+    // UI helpers
+    function setStatus(t){ els.status.textContent = t; }
+    function sys(text){ const d=document.createElement('div'); d.className='sys'; d.textContent=text; els.messages.appendChild(d); els.messages.scrollTop = els.messages.scrollHeight; }
+    function renderMsg(m){
+      const wrap = document.createElement('div');
+      const mine = m.user_id === state.userId;
+      wrap.className = 'msg' + (mine ? ' me' : '');
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const when = new Date(m.created_at || Date.now());
+      meta.innerHTML = `<strong>${escapeHtml(m.name||'anon')}</strong> · ${when.toLocaleString()}${mine ? ' · you' : ''}`;
+      const text = document.createElement('div');
+      text.className='text';
+      text.textContent = m.text;
+      wrap.appendChild(meta); wrap.appendChild(text);
+      els.messages.appendChild(wrap);
+      els.messages.scrollTop = els.messages.scrollHeight;
+    }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    async function joinRoom(newRoom){
+      if(state.presenceChannel){ await supabase.removeChannel(state.presenceChannel); state.presenceChannel=null; }
+      if(state.dataChannel){ await supabase.removeChannel(state.dataChannel); state.dataChannel=null; }
+      els.messages.innerHTML='';
+      state.room = (newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');
+      localStorage.setItem('room', state.room);
+      els.roomInput.value = state.room;
+
+      // Presence channel
+      state.presenceChannel = supabase.channel(`presence:${state.room}`, {
+        config: { presence: { key: state.userId } }
+      });
+      state.presenceChannel.on('presence', { event: 'sync' }, () => {
+        const pres = state.presenceChannel.presenceState();
+        const users = new Set();
+        for(const key in pres){ pres[key].forEach(v=> users.add(v.userId)); }
+        els.online.textContent = `${users.size} online`;
+      });
+      await state.presenceChannel.subscribe(async status => {
+        if(status === 'SUBSCRIBED'){
+          state.presenceChannel.track({ userId: state.userId, name: state.name||'anon', room: state.room });
+        }
+      });
+
+      if(PERSIST){
+        // Load last 200 messages
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('room', state.room)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if(error){ console.error(error); sys('Failed to load history'); }
+        else { data.forEach(renderMsg); }
+
+        // Subscribe to DB inserts for this room
+        state.dataChannel = supabase.channel(`messages:${state.room}`)
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'messages', filter: `room=eq.${state.room}`
+          }, (payload) => {
+            const m = payload.new; renderMsg(m);
+          })
+          .subscribe();
+        sys(`Joined #${state.room}`);
+      } else {
+        // Broadcast-only (no history)
+        state.dataChannel = supabase.channel(`broadcast:${state.room}`)
+          .on('broadcast', { event: 'msg' }, ({ payload }) => renderMsg(payload))
+          .subscribe(() => sys(`Joined #${state.room}`));
+      }
+    }
+
+    async function send(){
+      const text = els.input.value.trim();
+      if(!text) return;
+      if(text.length > 300){ alert('Max 300 characters'); return; }
+      const name = (els.name.value || 'anon').slice(0,20);
+      els.name.value = name; state.name = name; localStorage.setItem('nickname', name);
+      localStorage.setItem('uid', state.userId);
+
+      const msg = { room: state.room, user_id: state.userId, name, text, created_at: new Date().toISOString() };
+      els.input.value='';
+
+      if(PERSIST){
+        const { error } = await supabase.from('messages').insert(msg);
+        if(error){ console.error(error); alert('Failed to send'); }
+      } else {
+        state.dataChannel.send({ type: 'broadcast', event: 'msg', payload: msg });
+        renderMsg(msg); // optimistic
+      }
+    }
+
+    // Events
+    els.send.addEventListener('click', send);
+    els.input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+    els.switchRoom.addEventListener('click', ()=> joinRoom(els.roomInput.value));
+
+    // init
+    setStatus('Ready');
+    els.name.value = state.name;
+    joinRoom(state.room);
+  </script>
+</body>
+</html>
