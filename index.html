@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Global Chat — Supabase</title>
   <style>
-    :root { --bg:#0f172a; --panel:#111827; --accent:#22d3ee; --muted:#94a3b8; --text:#e5e7eb; }
+    :root { --bg:#0f172a; --panel:#111827; --accent:#22d3ee; --muted:#94a3b8; --text:#e5e7eb; --ann:#f59e0b; }
     * { box-sizing: border-box; }
     body { margin:0; font:16px system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; background:linear-gradient(180deg,#0b1025,#0f172a); color:var(--text); display:flex; min-height:100vh; }
-    .container { max-width:1100px; margin:0 auto; flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; }
+    .container { max-width:1220px; margin:0 auto; flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; }
     header { display:flex; align-items:center; gap:10px; }
     header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
     header .badge { padding:4px 8px; border-radius:999px; background:#0ea5a5; font-size:12px; }
@@ -16,11 +16,12 @@
     #room { padding:10px 14px; display:flex; align-items:center; gap:8px; }
     #room input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
     #room button, .btn { padding:10px 14px; border-radius:10px; border:0; background:var(--accent); color:#001018; font-weight:700; cursor:pointer; }
-    .layout { display:grid; grid-template-columns: 1fr 280px; gap:12px; min-height:0; }
+    .layout { display:grid; grid-template-columns: 1fr 300px 300px; gap:12px; min-height:0; }
+    @media (max-width: 1240px){ .layout { grid-template-columns: 1fr 300px; } }
     @media (max-width: 920px){ .layout { grid-template-columns: 1fr; } }
     #chat { display:flex; min-height:0; gap:12px; flex-direction:column; }
     #messages { flex: 1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
-    .msg { padding:10px 12px; border-radius:12px; background:#0b1226; border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:6px; }
+    .msg { padding:10px 12px; border-radius:12px; background:#0b1226; border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:6px; cursor: pointer; }
     .meta { font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
     .me .meta strong { color:#a7f3d0; }
     .text { line-height:1.4; white-space:pre-wrap; word-wrap:anywhere; }
@@ -33,22 +34,50 @@
     .row { display:flex; gap:12px; align-items:center; }
     .grow { flex:1; }
 
+    /* Announcement bar */
+    #announce { display:none; position:sticky; top:0; z-index:2; margin:0 12px; padding:12px; border-radius:12px; background:linear-gradient(90deg, rgba(245,158,11,.18), rgba(245,158,11,.08)); border:1px solid var(--ann); box-shadow:0 4px 20px rgba(245,158,11,.15); }
+    #announce .label { font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:.06em; color:#fff; background:var(--ann); padding:2px 8px; border-radius:999px; display:inline-block; margin-bottom:6px; }
+    #announce .txt { font-size:15px; }
+    #announce .who { font-size:12px; color:#ffd79a; margin-top:6px; }
+
     /* Admin panel */
     #admin { padding:12px; display:flex; flex-direction:column; gap:10px; }
     #admin h3 { margin:0; font-size:14px; letter-spacing:.2px; }
     #admin .small { font-size:12px; color:var(--muted); }
-    #admin input[type="password"]{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
+    #admin input[type="password"], #admin input[type="text"]{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
     #admin .btn-row { display:flex; gap:8px; flex-wrap:wrap; }
     .pill { padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.08); font-size:12px; }
     .danger { background:#fca5a5; color:#220; }
     .warn { background:#fde68a; color:#221; }
+    #muteList { font-size:12px; color:var(--muted); }
+
+    /* Pinned panel */
+    #pins { padding:12px; display:flex; flex-direction:column; gap:10px; }
+    #pins h3 { margin:0; font-size:14px; }
+    #pinList { display:flex; flex-direction:column; gap:8px; max-height:400px; overflow:auto; }
+    .pin { padding:10px 12px; border-radius:12px; background:#0b1226; border:1px solid rgba(255,255,255,.12); cursor:pointer; }
+    .pin .meta { font-size:12px; color:var(--muted); }
+    .pin:hover { outline:1px dashed rgba(255,255,255,.25); }
+    .hint { font-size:12px; color:var(--muted); }
 
     /* Disco mode */
     @keyframes partyHue { from { filter: hue-rotate(0deg) saturate(1.25) contrast(1.05); } to { filter: hue-rotate(360deg) saturate(1.25) contrast(1.05); } }
     body.disco { animation: partyHue 1s linear infinite; }
+
+    /* Kick overlay */
+    .blocker { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .blocker-inner { max-width:520px; text-align:center; padding:24px; border-radius:16px; background:#0b1226; border:1px solid rgba(255,255,255,.12); }
+    .blocker h2 { margin:0 0 10px; font-size:20px; }
   </style>
 </head>
 <body>
+  <div id="blocker" class="blocker" style="display:none">
+    <div class="blocker-inner">
+      <h2>You've been kicked</h2>
+      <p class="small">An admin removed you from the room. Refresh the page to rejoin.</p>
+    </div>
+  </div>
+
   <div class="container">
     <header>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -68,6 +97,11 @@
 
     <div class="layout">
       <div id="chat" class="card">
+        <div id="announce">
+          <div class="label">📢 Announcement</div>
+          <div id="announceText" class="txt"></div>
+          <div class="who">— <span id="announceBy"></span> <span id="announceAt"></span></div>
+        </div>
         <div id="messages"></div>
         <div id="composer">
           <input id="name" placeholder="Nickname" maxlength="20" />
@@ -91,10 +125,34 @@
           <div class="btn-row">
             <button id="pauseBtn" class="btn warn">Pause</button>
             <button id="unpauseBtn" class="btn">Unpause</button>
-            <button id="clearBtn" class="btn danger">Clear chat</button>
+            <button id="clearBtn" class="btn danger">Clear</button>
             <button id="discoBtn" class="btn">Disco 10s</button>
           </div>
+          <hr style="opacity:.15">
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
+            <input id="targetNick" type="text" placeholder="Nickname (case-insensitive)" />
+            <div class="btn-row">
+              <button id="kickBtn" class="btn danger">Kick</button>
+              <button id="muteBtn" class="btn warn">Mute</button>
+              <button id="unmuteBtn" class="btn">Unmute</button>
+            </div>
+            <div id="muteList" class="small"></div>
+          </div>
+          <hr style="opacity:.15">
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
+            <input id="announceInput" type="text" placeholder="Announcement text" />
+            <div class="btn-row">
+              <button id="setAnnBtn" class="btn">Set announcement</button>
+              <button id="clrAnnBtn" class="btn danger">Clear announcement</button>
+            </div>
+          </div>
         </div>
+      </aside>
+
+      <aside id="pins" class="card">
+        <h3>Pinned (max 5)</h3>
+        <div class="hint">Double‑click any message to pin. Double‑click a pin to unpin.</div>
+        <div id="pinList"></div>
       </aside>
     </div>
 
@@ -137,7 +195,20 @@
       discoBtn: document.getElementById('discoBtn'),
       pauseState: document.getElementById('pauseState'),
       roomNameLabel: document.getElementById('roomNameLabel'),
-      pausePill: document.getElementById('pausePill')
+      pausePill: document.getElementById('pausePill'),
+      targetNick: document.getElementById('targetNick'),
+      kickBtn: document.getElementById('kickBtn'),
+      muteBtn: document.getElementById('muteBtn'),
+      unmuteBtn: document.getElementById('unmuteBtn'),
+      blocker: document.getElementById('blocker'),
+      announce: document.getElementById('announce'),
+      announceText: document.getElementById('announceText'),
+      announceBy: document.getElementById('announceBy'),
+      announceAt: document.getElementById('announceAt'),
+      announceInput: document.getElementById('announceInput'),
+      setAnnBtn: document.getElementById('setAnnBtn'),
+      clrAnnBtn: document.getElementById('clrAnnBtn'),
+      pinList: document.getElementById('pinList')
     };
 
     let state = {
@@ -149,14 +220,19 @@
       paused: false,
       pausedBy: null,
       pausedName: null,
-      discoTimer: null
+      discoTimer: null,
+      mutedNicks: new Set(),
+      kicked: false,
+      pins: []
     };
 
     // de-dupe rendered messages across broadcast & db events
     const rendered = new Set();
     const msgKey = (m) => `${m.user_id}|${m.created_at}|${m.text}`;
 
-    // UI helpers
+    // helpers
+    const norm = (s)=> (s||'').trim().toLowerCase();
+
     function setStatus(t){ els.status.textContent = t; }
     function sys(text){ const d=document.createElement('div'); d.className='sys'; d.textContent=text; els.messages.appendChild(d); els.messages.scrollTop = els.messages.scrollHeight; }
     function renderMsg(m){
@@ -171,204 +247,77 @@
       text.className='text';
       text.textContent = m.text;
       wrap.appendChild(meta); wrap.appendChild(text);
+      wrap.title = 'Double‑click to pin';
+      wrap.addEventListener('dblclick', ()=> pinMessage(m));
       els.messages.appendChild(wrap);
     }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
-    function trimUI(){
-      const nodes = [...els.messages.querySelectorAll('.msg')];
-      const extra = nodes.length - MAX_MSGS;
-      for(let i=0;i<extra;i++) nodes[i].remove();
-      els.messages.scrollTop = els.messages.scrollHeight;
-    }
+    function trimUI(){ const nodes = [...els.messages.querySelectorAll('.msg')]; const extra = nodes.length - MAX_MSGS; for(let i=0;i<extra;i++) nodes[i].remove(); els.messages.scrollTop = els.messages.scrollHeight; }
     function clearUI(){ els.messages.innerHTML=''; rendered.clear(); }
     function addIfNew(m){ const k = msgKey(m); if(rendered.has(k)) return; rendered.add(k); renderMsg(m); trimUI(); }
 
     // Admin UI
-    function setAdmin(on){
-      state.admin = !!on;
-      els.adminLocked.style.display = on ? 'none' : '';
-      els.adminControls.style.display = on ? '' : 'none';
-    }
-    function setPaused(p, byId = null, byName = null){
-      state.paused = !!p;
-      state.pausedBy = byId;
-      state.pausedName = byName;
-      const who = state.paused ? (state.pausedName ? `paused by ${escapeHtml(state.pausedName)}` : 'paused') : 'active';
-      els.pauseState.textContent = who;
-      els.pausePill.style.background = state.paused ? '#fde68a' : 'rgba(255,255,255,.08)';
-      updateComposerDisabled();
-    }
-    function updateComposerDisabled(){
-      const blocked = state.paused && state.userId !== state.pausedBy; // only pauser may talk while paused
-      els.input.disabled = blocked;
-      els.send.disabled = blocked;
-      els.input.placeholder = blocked ? 'Chat is paused by admin' : 'Type a message… (Shift+Enter = newline)';
-    }
+    function setAdmin(on){ state.admin = !!on; els.adminLocked.style.display = on ? 'none' : ''; els.adminControls.style.display = on ? '' : 'none'; }
+    function setPaused(p, byId = null, byName = null){ state.paused = !!p; state.pausedBy = byId; state.pausedName = byName; const who = state.paused ? (state.pausedName ? `paused by ${escapeHtml(state.pausedName)}` : 'paused') : 'active'; els.pauseState.textContent = who; els.pausePill.style.background = state.paused ? '#fde68a' : 'rgba(255,255,255,.08)'; updateComposerDisabled(); }
+    function updateComposerDisabled(){ const blocked = (state.paused && state.userId !== state.pausedBy) || state.kicked || state.mutedNicks.has(norm(state.name)); els.input.disabled = blocked; els.send.disabled = blocked; if(state.kicked){ els.input.placeholder = 'You were kicked. Refresh to rejoin.'; } else if(state.mutedNicks.has(norm(state.name))) { els.input.placeholder = 'You are muted by admin.'; } else if(state.paused && state.userId !== state.pausedBy) { els.input.placeholder = 'Chat is paused by admin.'; } else { els.input.placeholder = 'Type a message… (Shift+Enter = newline)'; } }
+    function updateMuteList(){ const arr = Array.from(state.mutedNicks.values()); document.getElementById('muteList').textContent = arr.length ? `Muted: ${arr.join(', ')}` : 'Muted: (none)'; updateComposerDisabled(); }
 
-    function startDisco(ms=10000){
-      clearTimeout(state.discoTimer);
-      document.body.classList.add('disco');
-      sys('✨ Disco!');
-      state.discoTimer = setTimeout(()=>{
-        document.body.classList.remove('disco');
-      }, ms);
-    }
+    // Disco
+    function startDisco(ms=10000){ clearTimeout(state.discoTimer); document.body.classList.add('disco'); sys('✨ Disco!'); state.discoTimer = setTimeout(()=>{ document.body.classList.remove('disco'); }, ms); }
+    function showBlocker(){ document.getElementById('blocker').style.display = ''; state.kicked = true; updateComposerDisabled(); }
 
-    async function loadRoomState(){
-      const { data, error } = await supabase
-        .from('room_state')
-        .select('paused, paused_by, paused_name')
-        .eq('room', state.room)
-        .maybeSingle();
-      if(!error && data){ setPaused(!!data.paused, data.paused_by || null, data.paused_name || null); }
-      else { setPaused(false, null, null); }
-    }
+    // Announcement helpers
+    function renderAnnouncement(text, by, at){ if(text){ els.announce.style.display='block'; els.announceText.textContent = text; els.announceBy.textContent = by ? by : 'admin'; els.announceAt.textContent = at ? new Date(at).toLocaleString() : ''; } else { els.announce.style.display='none'; els.announceText.textContent = ''; els.announceBy.textContent = ''; els.announceAt.textContent = ''; } }
 
-    async function joinRoom(newRoom){
-      if(state.roomChannel){ await supabase.removeChannel(state.roomChannel); state.roomChannel=null; }
-      clearUI();
-      state.room = (newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');
-      localStorage.setItem('room', state.room);
-      els.roomInput.value = state.room;
-      els.roomNameLabel.textContent = state.room;
+    // Pins (localStorage per room)
+    const pinsKey = () => `pins:${state.room}`;
+    function loadPins(){ try { state.pins = JSON.parse(localStorage.getItem(pinsKey())||'[]'); } catch { state.pins = []; } renderPins(); }
+    function savePins(){ localStorage.setItem(pinsKey(), JSON.stringify(state.pins)); }
+    function renderPins(){ els.pinList.innerHTML=''; if(!state.pins.length){ const p=document.createElement('div'); p.className='hint'; p.textContent='No pins yet'; els.pinList.appendChild(p); return; } state.pins.forEach(addPinDOM); }
+    function addPinDOM(p){ const d=document.createElement('div'); d.className='pin'; d.dataset.id=p.id; d.innerHTML = `<div class="meta"><strong>${escapeHtml(p.name)}</strong> · ${new Date(p.created_at).toLocaleString()}</div><div class="text">${escapeHtml(p.text)}</div>`; d.title='Double‑click to unpin'; d.addEventListener('dblclick', ()=> unpin(p.id)); els.pinList.appendChild(d); }
+    function pinMessage(m){ const id = msgKey(m); if(state.pins.find(x=>x.id===id)) return; if(state.pins.length>=5) { alert('Pin board is full (max 5). Double‑click a pin to remove.'); return; } const item={ id, name:m.name||'anon', text:m.text, created_at:m.created_at||new Date().toISOString() }; state.pins.push(item); savePins(); renderPins(); }
+    function unpin(id){ state.pins = state.pins.filter(p=>p.id!==id); savePins(); renderPins(); }
 
-      // one channel for presence + broadcast + postgres changes
-      state.roomChannel = supabase.channel(`room:${state.room}`, { config: { presence: { key: state.userId } } });
+    async function loadRoomState(){ const { data, error } = await supabase.from('room_state').select('paused, paused_by, paused_name, muted_nicks, announcement_text, announcement_by, announcement_at').eq('room', state.room).maybeSingle(); if(!error && data){ setPaused(!!data.paused, data.paused_by || null, data.paused_name || null); state.mutedNicks = new Set((data.muted_nicks || []).map(norm)); updateMuteList(); renderAnnouncement(data.announcement_text || '', data.announcement_by || '', data.announcement_at || ''); } else { setPaused(false, null, null); state.mutedNicks = new Set(); updateMuteList(); renderAnnouncement('', '', ''); } }
 
-      // presence → online count
-      state.roomChannel.on('presence', { event: 'sync' }, () => {
-        const pres = state.roomChannel.presenceState();
-        const users = new Set();
-        for(const key in pres){ pres[key].forEach(v=> users.add(v.userId)); }
-        els.online.textContent = `${users.size} online`;
-      });
+    async function joinRoom(newRoom){ if(state.roomChannel){ await supabase.removeChannel(state.roomChannel); state.roomChannel=null; } clearUI(); state.kicked = false; document.getElementById('blocker').style.display='none'; state.room = (newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-'); localStorage.setItem('room', state.room); els.roomInput.value = state.room; document.getElementById('roomNameLabel').textContent = state.room; state.roomChannel = supabase.channel(`room:${state.room}`, { config: { presence: { key: state.userId } } }); state.roomChannel.on('presence', { event: 'sync' }, () => { const pres = state.roomChannel.presenceState(); const users = new Set(); for(const key in pres){ pres[key].forEach(v=> users.add(v.userId)); } document.getElementById('online').textContent = `${users.size} online`; }); if(PERSIST){ state.roomChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room=eq.${state.room}` }, (payload) => addIfNew(payload.new)); state.roomChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'room_state', filter: `room=eq.${state.room}` }, (payload) => { const row = payload.new || payload.old || {}; setPaused(!!row.paused, row.paused_by || null, row.paused_name || null); state.mutedNicks = new Set((row.muted_nicks || []).map(norm)); updateMuteList(); renderAnnouncement(row.announcement_text || '', row.announcement_by || '', row.announcement_at || ''); }); }
+      state.roomChannel.on('broadcast', { event: 'msg' }, ({ payload }) => addIfNew(payload)); state.roomChannel.on('broadcast', { event: 'admin' }, ({ payload }) => { if(payload?.type === 'clear'){ clearUI(); sys('Chat cleared by admin'); } if(payload?.type === 'pause'){ setPaused(true, payload.by || null, payload.name || 'admin'); } if(payload?.type === 'unpause'){ setPaused(false, null, null); } if(payload?.type === 'disco'){ startDisco(payload.duration || 10000); } if(payload?.type === 'kick' && norm(state.name) === norm(payload.nick)) { showBlocker(); } if(payload?.type === 'muted'){ state.mutedNicks.add(norm(payload.nick)); updateMuteList(); } if(payload?.type === 'unmuted'){ state.mutedNicks.delete(norm(payload.nick)); updateMuteList(); } if(payload?.type === 'announce'){ renderAnnouncement(payload.text || '', payload.by || 'admin', new Date().toISOString()); } }); await state.roomChannel.subscribe(async (status) => { if(status === 'SUBSCRIBED'){ state.roomChannel.track({ userId: state.userId, name: state.name||'anon', room: state.room }); await loadRecent(); await loadRoomState(); loadPins(); sys(`Joined #${state.room}`); } }); }
 
-      if(PERSIST){
-        // realtime DB inserts → append instantly
-        state.roomChannel.on('postgres_changes', {
-          event: 'INSERT', schema: 'public', table: 'messages', filter: `room=eq.${state.room}`
-        }, (payload) => addIfNew(payload.new));
-        // listen for pause/unpause changes
-        state.roomChannel.on('postgres_changes', {
-          event: '*', schema: 'public', table: 'room_state', filter: `room=eq.${state.room}`
-        }, (payload) => {
-          const row = payload.new || payload.old || {};
-          setPaused(!!row.paused, row.paused_by || null, row.paused_name || null);
-        });
-      }
+    async function loadRecent(){ if(!PERSIST) return; clearUI(); const { data, error } = await supabase.from('messages').select('*').eq('room', state.room).order('created_at', { ascending: false }).limit(MAX_MSGS); if(error){ console.error(error); sys('Failed to load history'); return; } data.reverse().forEach(addIfNew); }
 
-      // broadcast for instant fanout (messages + admin events)
-      state.roomChannel.on('broadcast', { event: 'msg' }, ({ payload }) => addIfNew(payload));
-      state.roomChannel.on('broadcast', { event: 'admin' }, ({ payload }) => {
-        if(payload?.type === 'clear'){ clearUI(); sys('Chat cleared by admin'); }
-        if(payload?.type === 'pause'){ setPaused(true, payload.by || null, payload.name || 'admin'); }
-        if(payload?.type === 'unpause'){ setPaused(false, null, null); }
-        if(payload?.type === 'disco'){ startDisco(payload.duration || 10000); }
-      });
+    async function send(){ const text = els.input.value.trim(); if(!text) return; if(text.length > 300){ alert('Max 300 characters'); return; } if(state.kicked){ alert('You were kicked. Refresh to rejoin.'); return; } if(state.mutedNicks.has(norm(state.name)) && !state.admin){ alert('You are muted by admin.'); return; } if(state.paused && state.userId !== state.pausedBy){ alert(`Chat is paused by ${state.pausedName || 'admin'}.`); return; } const name = (els.name.value || 'anon').slice(0,20); els.name.value = name; state.name = name; localStorage.setItem('nickname', name); localStorage.setItem('uid', state.userId); const msg = { room: state.room, user_id: state.userId, name, text, created_at: new Date().toISOString() }; els.input.value=''; state.roomChannel.send({ type: 'broadcast', event: 'msg', payload: msg }); addIfNew(msg); if(PERSIST){ const { error } = await supabase.from('messages').insert(msg); if(error){ console.error(error); } } }
 
-      await state.roomChannel.subscribe(async (status) => {
-        if(status === 'SUBSCRIBED'){
-          state.roomChannel.track({ userId: state.userId, name: state.name||'anon', room: state.room });
-          await loadRecent();
-          await loadRoomState();
-          sys(`Joined #${state.room}`);
-        }
-      });
-    }
+    // --- Admin actions ---
+    document.getElementById('unlock').addEventListener('click', () => { if(els.pass.value === ADMIN_PASS){ setAdmin(true); els.pass.value=''; } else { alert('Wrong passcode'); } });
 
-    async function loadRecent(){
-      if(!PERSIST) return; // no history in broadcast-only mode
-      clearUI();
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('room', state.room)
-        .order('created_at', { ascending: false })
-        .limit(MAX_MSGS);
-      if(error){ console.error(error); sys('Failed to load history'); return; }
-      data.reverse().forEach(addIfNew);
-    }
+    document.getElementById('pauseBtn').addEventListener('click', async () => { if(!state.admin) return; const row = { room: state.room, paused: true, paused_by: state.userId, paused_name: state.name || 'anon', updated_at: new Date().toISOString() }; const { error } = await supabase.from('room_state').upsert(row, { onConflict: 'room' }); if(error) { console.error(error); alert('Pause failed (check table & policies).'); } else { setPaused(true, state.userId, state.name || 'anon'); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'pause', by: state.userId, name: state.name || 'anon' } }); } });
 
-    async function send(){
-      const text = els.input.value.trim();
-      if(!text) return;
-      if(text.length > 300){ alert('Max 300 characters'); return; }
-      if(state.paused && state.userId !== state.pausedBy){ alert(`Chat is paused by ${state.pausedName || 'admin'}.`); return; }
-      const name = (els.name.value || 'anon').slice(0,20);
-      els.name.value = name; state.name = name; localStorage.setItem('nickname', name);
-      localStorage.setItem('uid', state.userId);
+    document.getElementById('unpauseBtn').addEventListener('click', async () => { if(!state.admin) return; const row = { room: state.room, paused: false, paused_by: null, paused_name: null, updated_at: new Date().toISOString() }; const { error } = await supabase.from('room_state').upsert(row, { onConflict: 'room' }); if(error) { console.error(error); alert('Unpause failed (check table & policies).'); } else { setPaused(false, null, null); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'unpause' } }); } });
 
-      const msg = { room: state.room, user_id: state.userId, name, text, created_at: new Date().toISOString() };
-      els.input.value='';
+    document.getElementById('clearBtn').addEventListener('click', async () => { if(!state.admin) return; if(!confirm('Clear ALL messages in #' + state.room + '?')) return; const { error } = await supabase.from('messages').delete().eq('room', state.room); if(error){ console.error(error); alert('Clear failed (need DELETE policy).'); } else { clearUI(); sys('Chat cleared.'); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'clear' } }); } });
 
-      // broadcast first for instant delivery to everyone
-      state.roomChannel.send({ type: 'broadcast', event: 'msg', payload: msg });
-      addIfNew(msg); // show immediately for the sender
+    document.getElementById('discoBtn').addEventListener('click', async () => { if(!state.admin) return; const duration = 10000; startDisco(duration); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'disco', duration } }); });
 
-      // then persist (if enabled). DB insert will be de-duped on arrival
-      if(PERSIST){
-        const { error } = await supabase.from('messages').insert(msg);
-        if(error){ console.error(error); /* keep the broadcasted message anyway */ }
-      }
-    }
+    document.getElementById('kickBtn').addEventListener('click', () => { if(!state.admin) return; const nick = norm(document.getElementById('targetNick').value); if(!nick) return alert('Enter a nickname'); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'kick', nick } }); sys(`Kicked ${nick}`); });
 
-    // Admin actions
-    els.unlock.addEventListener('click', () => {
-      if(els.pass.value === ADMIN_PASS){ setAdmin(true); els.pass.value=''; }
-      else { alert('Wrong passcode'); }
-    });
+    async function setMuted(nicks){ const uniq = Array.from(new Set(nicks.map(norm))).filter(Boolean); const row = { room: state.room, muted_nicks: uniq, paused: state.paused, paused_by: state.pausedBy, paused_name: state.pausedName, announcement_text: els.announceText.textContent || null, announcement_by: els.announceBy.textContent || null, announcement_at: els.announceText.textContent ? new Date().toISOString() : null, updated_at: new Date().toISOString() }; const { error } = await supabase.from('room_state').upsert(row, { onConflict: 'room' }); if(error){ console.error(error); alert('Failed to update mute list (check table & policies).'); } }
 
-    els.pauseBtn.addEventListener('click', async () => {
-      if(!state.admin) return;
-      const row = { room: state.room, paused: true, paused_by: state.userId, paused_name: state.name || 'anon', updated_at: new Date().toISOString() };
-      const { error } = await supabase.from('room_state').upsert(row);
-      if(error) { console.error(error); alert('Pause failed (check table & policies).'); }
-      else {
-        setPaused(true, state.userId, state.name || 'anon');
-        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'pause', by: state.userId, name: state.name || 'anon' } });
-      }
-    });
+    document.getElementById('muteBtn').addEventListener('click', async () => { if(!state.admin) return; const nick = norm(document.getElementById('targetNick').value); if(!nick) return alert('Enter a nickname'); state.mutedNicks.add(nick); updateMuteList(); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'muted', nick } }); await setMuted(Array.from(state.mutedNicks)); });
 
-    els.unpauseBtn.addEventListener('click', async () => {
-      if(!state.admin) return;
-      const row = { room: state.room, paused: false, paused_by: null, paused_name: null, updated_at: new Date().toISOString() };
-      const { error } = await supabase.from('room_state').upsert(row);
-      if(error) { console.error(error); alert('Unpause failed (check table & policies).'); }
-      else {
-        setPaused(false, null, null);
-        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'unpause' } });
-      }
-    });
+    document.getElementById('unmuteBtn').addEventListener('click', async () => { if(!state.admin) return; const nick = norm(document.getElementById('targetNick').value); if(!nick) return alert('Enter a nickname'); state.mutedNicks.delete(nick); updateMuteList(); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'unmuted', nick } }); await setMuted(Array.from(state.mutedNicks)); });
 
-    els.clearBtn.addEventListener('click', async () => {
-      if(!state.admin) return;
-      if(!confirm('Clear ALL messages in #' + state.room + '?')) return;
-      const { error } = await supabase.from('messages').delete().eq('room', state.room);
-      if(error){ console.error(error); alert('Clear failed (need DELETE policy).'); }
-      else { 
-        clearUI(); sys('Chat cleared.');
-        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'clear' } });
-      }
-    });
+    document.getElementById('setAnnBtn').addEventListener('click', async () => { if(!state.admin) return; const text = document.getElementById('announceInput').value.trim(); if(!text) return alert('Type an announcement'); const row = { room: state.room, announcement_text: text, announcement_by: state.name || 'admin', announcement_at: new Date().toISOString() }; const { error } = await supabase.from('room_state').upsert(row, { onConflict: 'room' }); if(error){ console.error(error); alert('Set announcement failed (check table & policies).'); } else { renderAnnouncement(text, state.name || 'admin', new Date()); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'announce', text, by: state.name || 'admin' } }); } });
 
-    els.discoBtn.addEventListener('click', async () => {
-      if(!state.admin) return;
-      const duration = 10000;
-      startDisco(duration);
-      state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'disco', duration } });
-    });
+    document.getElementById('clrAnnBtn').addEventListener('click', async () => { if(!state.admin) return; const row = { room: state.room, announcement_text: null, announcement_by: null, announcement_at: null }; const { error } = await supabase.from('room_state').upsert(row, { onConflict: 'room' }); if(error){ console.error(error); alert('Clear announcement failed'); } else { renderAnnouncement('', '', ''); state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'announce', text:'', by:'' } }); } });
 
-    // Events
-    els.send.addEventListener('click', send);
-    els.input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
-    els.switchRoom.addEventListener('click', ()=> joinRoom(els.roomInput.value));
+    // Core events
+    document.getElementById('send').addEventListener('click', send);
+    document.getElementById('input').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+    document.getElementById('switchRoom').addEventListener('click', ()=> joinRoom(document.getElementById('roomInput').value));
 
     // init
-    setStatus('Ready');
-    els.name.value = state.name;
-    setAdmin(false);
-    joinRoom(state.room);
+    setStatus('Ready'); document.getElementById('name').value = state.name; setAdmin(false); joinRoom(state.room);
   </script>
 </body>
 </html>
