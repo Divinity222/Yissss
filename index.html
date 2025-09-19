@@ -8,15 +8,17 @@
     :root { --bg:#0f172a; --panel:#111827; --accent:#22d3ee; --muted:#94a3b8; --text:#e5e7eb; }
     * { box-sizing: border-box; }
     body { margin:0; font:16px system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; background:linear-gradient(180deg,#0b1025,#0f172a); color:var(--text); display:flex; min-height:100vh; }
-    .container { max-width:900px; margin:0 auto; flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; }
+    .container { max-width:1100px; margin:0 auto; flex:1; display:flex; flex-direction:column; padding:16px; gap:12px; }
     header { display:flex; align-items:center; gap:10px; }
     header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
     header .badge { padding:4px 8px; border-radius:999px; background:#0ea5a5; font-size:12px; }
     .card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
     #room { padding:10px 14px; display:flex; align-items:center; gap:8px; }
     #room input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
-    #room button { padding:10px 14px; border-radius:10px; border:0; background:var(--accent); color:#001018; font-weight:700; cursor:pointer; }
-    #chat { flex:1; display:flex; min-height:0; gap:12px; }
+    #room button, .btn { padding:10px 14px; border-radius:10px; border:0; background:var(--accent); color:#001018; font-weight:700; cursor:pointer; }
+    .layout { display:grid; grid-template-columns: 1fr 280px; gap:12px; min-height:0; }
+    @media (max-width: 920px){ .layout { grid-template-columns: 1fr; } }
+    #chat { display:flex; min-height:0; gap:12px; flex-direction:column; }
     #messages { flex: 1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
     .msg { padding:10px 12px; border-radius:12px; background:#0b1226; border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:6px; }
     .meta { font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
@@ -30,6 +32,20 @@
     footer { text-align:center; font-size:12px; color:var(--muted); padding:8px 0 0; }
     .row { display:flex; gap:12px; align-items:center; }
     .grow { flex:1; }
+
+    /* Admin panel */
+    #admin { padding:12px; display:flex; flex-direction:column; gap:10px; }
+    #admin h3 { margin:0; font-size:14px; letter-spacing:.2px; }
+    #admin .small { font-size:12px; color:var(--muted); }
+    #admin input[type="password"]{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1226; color:var(--text); }
+    #admin .btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .pill { padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.08); font-size:12px; }
+    .danger { background:#fca5a5; color:#220; }
+    .warn { background:#fde68a; color:#221; }
+
+    /* Disco mode */
+    @keyframes partyHue { from { filter: hue-rotate(0deg) saturate(1.25) contrast(1.05); } to { filter: hue-rotate(360deg) saturate(1.25) contrast(1.05); } }
+    body.disco { animation: partyHue 1s linear infinite; }
   </style>
 </head>
 <body>
@@ -50,13 +66,36 @@
       </div>
     </div>
 
-    <div id="chat" class="card" style="flex-direction:column;">
-      <div id="messages"></div>
-      <div id="composer">
-        <input id="name" placeholder="Nickname" maxlength="20" />
-        <textarea id="input" placeholder="Type a message… (Shift+Enter = newline)" maxlength="300"></textarea>
-        <button id="send">Send</button>
+    <div class="layout">
+      <div id="chat" class="card">
+        <div id="messages"></div>
+        <div id="composer">
+          <input id="name" placeholder="Nickname" maxlength="20" />
+          <textarea id="input" placeholder="Type a message… (Shift+Enter = newline)" maxlength="300"></textarea>
+          <button id="send">Send</button>
+        </div>
       </div>
+
+      <aside id="admin" class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <h3>Admin</h3>
+          <span id="pausePill" class="pill">Status: <strong id="pauseState">active</strong></span>
+        </div>
+        <div id="adminLocked">
+          <p class="small">Enter passcode to unlock controls.</p>
+          <input id="pass" type="password" placeholder="Passcode" />
+          <div class="btn-row"><button id="unlock" class="btn">Unlock</button></div>
+        </div>
+        <div id="adminControls" style="display:none">
+          <p class="small">Controls are scoped to the current room (<span id="roomNameLabel">global</span>).</p>
+          <div class="btn-row">
+            <button id="pauseBtn" class="btn warn">Pause</button>
+            <button id="unpauseBtn" class="btn">Unpause</button>
+            <button id="clearBtn" class="btn danger">Clear chat</button>
+            <button id="discoBtn" class="btn">Disco 10s</button>
+          </div>
+        </div>
+      </aside>
     </div>
 
     <footer>
@@ -68,12 +107,14 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // 1) Replace with your project values (Settings → API)
+    // --- your live project values ---
     const SUPABASE_URL = 'https://prpjfrqfbbsxqhspqheo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBycGpmcnFmYmJzeHFoc3BxaGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNjgwMDksImV4cCI6MjA3Mzc0NDAwOX0.XEUz5g-tzW4UAsKLk62FJratwaLYAL-1noBTu0EwTkY';
 
-    // 2) Choose persistence mode (true = store in Postgres + Realtime; false = ephemeral broadcast only)
-    const PERSIST = true;
+    // behavior toggles
+    const PERSIST = true;        // true = store in DB + realtime; false = broadcast-only (no history)
+    const MAX_MSGS = 15;         // keep only the newest 15 in the UI
+    const ADMIN_PASS = 'TrueDivinity442';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -85,16 +126,35 @@
       name: document.getElementById('name'),
       online: document.getElementById('online'),
       roomInput: document.getElementById('roomInput'),
-      switchRoom: document.getElementById('switchRoom')
+      switchRoom: document.getElementById('switchRoom'),
+      adminLocked: document.getElementById('adminLocked'),
+      adminControls: document.getElementById('adminControls'),
+      pass: document.getElementById('pass'),
+      unlock: document.getElementById('unlock'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      unpauseBtn: document.getElementById('unpauseBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      discoBtn: document.getElementById('discoBtn'),
+      pauseState: document.getElementById('pauseState'),
+      roomNameLabel: document.getElementById('roomNameLabel'),
+      pausePill: document.getElementById('pausePill')
     };
 
     let state = {
       room: localStorage.getItem('room') || 'global',
       name: localStorage.getItem('nickname') || '',
       userId: localStorage.getItem('uid') || crypto.randomUUID(),
-      presenceChannel: null,
-      dataChannel: null
+      roomChannel: null,
+      admin: false,
+      paused: false,
+      pausedBy: null,
+      pausedName: null,
+      discoTimer: null
     };
+
+    // de-dupe rendered messages across broadcast & db events
+    const rendered = new Set();
+    const msgKey = (m) => `${m.user_id}|${m.created_at}|${m.text}`;
 
     // UI helpers
     function setStatus(t){ els.status.textContent = t; }
@@ -112,66 +172,129 @@
       text.textContent = m.text;
       wrap.appendChild(meta); wrap.appendChild(text);
       els.messages.appendChild(wrap);
-      els.messages.scrollTop = els.messages.scrollHeight;
     }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
+    function trimUI(){
+      const nodes = [...els.messages.querySelectorAll('.msg')];
+      const extra = nodes.length - MAX_MSGS;
+      for(let i=0;i<extra;i++) nodes[i].remove();
+      els.messages.scrollTop = els.messages.scrollHeight;
+    }
+    function clearUI(){ els.messages.innerHTML=''; rendered.clear(); }
+    function addIfNew(m){ const k = msgKey(m); if(rendered.has(k)) return; rendered.add(k); renderMsg(m); trimUI(); }
+
+    // Admin UI
+    function setAdmin(on){
+      state.admin = !!on;
+      els.adminLocked.style.display = on ? 'none' : '';
+      els.adminControls.style.display = on ? '' : 'none';
+    }
+    function setPaused(p, byId = null, byName = null){
+      state.paused = !!p;
+      state.pausedBy = byId;
+      state.pausedName = byName;
+      const who = state.paused ? (state.pausedName ? `paused by ${escapeHtml(state.pausedName)}` : 'paused') : 'active';
+      els.pauseState.textContent = who;
+      els.pausePill.style.background = state.paused ? '#fde68a' : 'rgba(255,255,255,.08)';
+      updateComposerDisabled();
+    }
+    function updateComposerDisabled(){
+      const blocked = state.paused && state.userId !== state.pausedBy; // only pauser may talk while paused
+      els.input.disabled = blocked;
+      els.send.disabled = blocked;
+      els.input.placeholder = blocked ? 'Chat is paused by admin' : 'Type a message… (Shift+Enter = newline)';
+    }
+
+    function startDisco(ms=10000){
+      clearTimeout(state.discoTimer);
+      document.body.classList.add('disco');
+      sys('✨ Disco!');
+      state.discoTimer = setTimeout(()=>{
+        document.body.classList.remove('disco');
+      }, ms);
+    }
+
+    async function loadRoomState(){
+      const { data, error } = await supabase
+        .from('room_state')
+        .select('paused, paused_by, paused_name')
+        .eq('room', state.room)
+        .maybeSingle();
+      if(!error && data){ setPaused(!!data.paused, data.paused_by || null, data.paused_name || null); }
+      else { setPaused(false, null, null); }
+    }
+
     async function joinRoom(newRoom){
-      if(state.presenceChannel){ await supabase.removeChannel(state.presenceChannel); state.presenceChannel=null; }
-      if(state.dataChannel){ await supabase.removeChannel(state.dataChannel); state.dataChannel=null; }
-      els.messages.innerHTML='';
+      if(state.roomChannel){ await supabase.removeChannel(state.roomChannel); state.roomChannel=null; }
+      clearUI();
       state.room = (newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');
       localStorage.setItem('room', state.room);
       els.roomInput.value = state.room;
+      els.roomNameLabel.textContent = state.room;
 
-      // Presence channel
-      state.presenceChannel = supabase.channel(`presence:${state.room}`, {
-        config: { presence: { key: state.userId } }
-      });
-      state.presenceChannel.on('presence', { event: 'sync' }, () => {
-        const pres = state.presenceChannel.presenceState();
+      // one channel for presence + broadcast + postgres changes
+      state.roomChannel = supabase.channel(`room:${state.room}`, { config: { presence: { key: state.userId } } });
+
+      // presence → online count
+      state.roomChannel.on('presence', { event: 'sync' }, () => {
+        const pres = state.roomChannel.presenceState();
         const users = new Set();
         for(const key in pres){ pres[key].forEach(v=> users.add(v.userId)); }
         els.online.textContent = `${users.size} online`;
       });
-      await state.presenceChannel.subscribe(async status => {
-        if(status === 'SUBSCRIBED'){
-          state.presenceChannel.track({ userId: state.userId, name: state.name||'anon', room: state.room });
-        }
-      });
 
       if(PERSIST){
-        // Load last 200 messages
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('room', state.room)
-          .order('created_at', { ascending: true })
-          .limit(200);
-        if(error){ console.error(error); sys('Failed to load history'); }
-        else { data.forEach(renderMsg); }
-
-        // Subscribe to DB inserts for this room
-        state.dataChannel = supabase.channel(`messages:${state.room}`)
-          .on('postgres_changes', {
-            event: 'INSERT', schema: 'public', table: 'messages', filter: `room=eq.${state.room}`
-          }, (payload) => {
-            const m = payload.new; renderMsg(m);
-          })
-          .subscribe();
-        sys(`Joined #${state.room}`);
-      } else {
-        // Broadcast-only (no history)
-        state.dataChannel = supabase.channel(`broadcast:${state.room}`)
-          .on('broadcast', { event: 'msg' }, ({ payload }) => renderMsg(payload))
-          .subscribe(() => sys(`Joined #${state.room}`));
+        // realtime DB inserts → append instantly
+        state.roomChannel.on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'messages', filter: `room=eq.${state.room}`
+        }, (payload) => addIfNew(payload.new));
+        // listen for pause/unpause changes
+        state.roomChannel.on('postgres_changes', {
+          event: '*', schema: 'public', table: 'room_state', filter: `room=eq.${state.room}`
+        }, (payload) => {
+          const row = payload.new || payload.old || {};
+          setPaused(!!row.paused, row.paused_by || null, row.paused_name || null);
+        });
       }
+
+      // broadcast for instant fanout (messages + admin events)
+      state.roomChannel.on('broadcast', { event: 'msg' }, ({ payload }) => addIfNew(payload));
+      state.roomChannel.on('broadcast', { event: 'admin' }, ({ payload }) => {
+        if(payload?.type === 'clear'){ clearUI(); sys('Chat cleared by admin'); }
+        if(payload?.type === 'pause'){ setPaused(true, payload.by || null, payload.name || 'admin'); }
+        if(payload?.type === 'unpause'){ setPaused(false, null, null); }
+        if(payload?.type === 'disco'){ startDisco(payload.duration || 10000); }
+      });
+
+      await state.roomChannel.subscribe(async (status) => {
+        if(status === 'SUBSCRIBED'){
+          state.roomChannel.track({ userId: state.userId, name: state.name||'anon', room: state.room });
+          await loadRecent();
+          await loadRoomState();
+          sys(`Joined #${state.room}`);
+        }
+      });
+    }
+
+    async function loadRecent(){
+      if(!PERSIST) return; // no history in broadcast-only mode
+      clearUI();
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('room', state.room)
+        .order('created_at', { ascending: false })
+        .limit(MAX_MSGS);
+      if(error){ console.error(error); sys('Failed to load history'); return; }
+      data.reverse().forEach(addIfNew);
     }
 
     async function send(){
       const text = els.input.value.trim();
       if(!text) return;
       if(text.length > 300){ alert('Max 300 characters'); return; }
+      if(state.paused && state.userId !== state.pausedBy){ alert(`Chat is paused by ${state.pausedName || 'admin'}.`); return; }
       const name = (els.name.value || 'anon').slice(0,20);
       els.name.value = name; state.name = name; localStorage.setItem('nickname', name);
       localStorage.setItem('uid', state.userId);
@@ -179,14 +302,62 @@
       const msg = { room: state.room, user_id: state.userId, name, text, created_at: new Date().toISOString() };
       els.input.value='';
 
+      // broadcast first for instant delivery to everyone
+      state.roomChannel.send({ type: 'broadcast', event: 'msg', payload: msg });
+      addIfNew(msg); // show immediately for the sender
+
+      // then persist (if enabled). DB insert will be de-duped on arrival
       if(PERSIST){
         const { error } = await supabase.from('messages').insert(msg);
-        if(error){ console.error(error); alert('Failed to send'); }
-      } else {
-        state.dataChannel.send({ type: 'broadcast', event: 'msg', payload: msg });
-        renderMsg(msg); // optimistic
+        if(error){ console.error(error); /* keep the broadcasted message anyway */ }
       }
     }
+
+    // Admin actions
+    els.unlock.addEventListener('click', () => {
+      if(els.pass.value === ADMIN_PASS){ setAdmin(true); els.pass.value=''; }
+      else { alert('Wrong passcode'); }
+    });
+
+    els.pauseBtn.addEventListener('click', async () => {
+      if(!state.admin) return;
+      const row = { room: state.room, paused: true, paused_by: state.userId, paused_name: state.name || 'anon', updated_at: new Date().toISOString() };
+      const { error } = await supabase.from('room_state').upsert(row);
+      if(error) { console.error(error); alert('Pause failed (check table & policies).'); }
+      else {
+        setPaused(true, state.userId, state.name || 'anon');
+        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'pause', by: state.userId, name: state.name || 'anon' } });
+      }
+    });
+
+    els.unpauseBtn.addEventListener('click', async () => {
+      if(!state.admin) return;
+      const row = { room: state.room, paused: false, paused_by: null, paused_name: null, updated_at: new Date().toISOString() };
+      const { error } = await supabase.from('room_state').upsert(row);
+      if(error) { console.error(error); alert('Unpause failed (check table & policies).'); }
+      else {
+        setPaused(false, null, null);
+        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'unpause' } });
+      }
+    });
+
+    els.clearBtn.addEventListener('click', async () => {
+      if(!state.admin) return;
+      if(!confirm('Clear ALL messages in #' + state.room + '?')) return;
+      const { error } = await supabase.from('messages').delete().eq('room', state.room);
+      if(error){ console.error(error); alert('Clear failed (need DELETE policy).'); }
+      else { 
+        clearUI(); sys('Chat cleared.');
+        state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'clear' } });
+      }
+    });
+
+    els.discoBtn.addEventListener('click', async () => {
+      if(!state.admin) return;
+      const duration = 10000;
+      startDisco(duration);
+      state.roomChannel.send({ type: 'broadcast', event: 'admin', payload: { type: 'disco', duration } });
+    });
 
     // Events
     els.send.addEventListener('click', send);
@@ -196,6 +367,7 @@
     // init
     setStatus('Ready');
     els.name.value = state.name;
+    setAdmin(false);
     joinRoom(state.room);
   </script>
 </body>
