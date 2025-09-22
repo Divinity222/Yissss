@@ -70,13 +70,13 @@ body.shake{animation:fxShake .1s linear infinite}
 .blocker{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
 .blocker-inner{max-width:520px;text-align:center;padding:24px;border-radius:16px;background:#0b1226;border:1px solid rgba(255,255,255,.12)}
 .blocker h2{margin:0 0 10px;font-size:20px}
-#fun{padding:12px;display:flex;flex-direction:column;gap:10px}
+#fun{grid-column:1/-1;padding:12px;display:flex;flex-direction:column;gap:10px}
 #fun h3{margin:0;font-size:14px}
 #colorRow{display:flex;gap:8px;flex-wrap:wrap}
 .swatch{width:24px;height:24px;border-radius:999px;border:2px solid rgba(255,255,255,.25);cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .swatch.sel{outline:2px solid #fff}
-#gameSel{width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
-#game{min-height:120px;background:#0b1226;border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;color:#cbd5e1}
+#gameSel,#difficultySel{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
+#game{min-height:260px;height:260px;background:#0b1226;border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;color:#cbd5e1}
 .ttt{display:grid;grid-template-columns:repeat(3,60px);gap:6px}
 .ttt button{width:60px;height:60px;font-size:22px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#111a2e;color:#fff;cursor:pointer}
 .mem{display:grid;grid-template-columns:repeat(4,44px);gap:6px}
@@ -126,7 +126,7 @@ body.shake{animation:fxShake .1s linear infinite}
 </div>
 </aside>
 <aside id="pins" class="card"><h3>Pinned (max 5)</h3><div class="hint">Double‑click any message to pin. Double‑click a pin to unpin.</div><div id="pinList"></div></aside>
-<aside id="fun" class="card"><h3>Fun & Style</h3><div class="row" id="colorRow"></div><select id="gameSel"><option value="rps">Rock • Paper • Scissors</option><option value="ttt">Tic‑Tac‑Toe</option><option value="guess">Number Guess</option><option value="mem">Memory Match</option><option value="react">Reaction Test</option></select><div id="game">Pick a game</div></aside>
+<aside id="fun" class="card"><h3>Fun & Style</h3><div class="row" id="colorRow"></div><div class="row controls"><select id="gameSel"><option value="rps">Rock • Paper • Scissors</option><option value="ttt">Tic‑Tac‑Toe</option><option value="guess">Number Guess</option><option value="mem">Memory Match</option><option value="react">Reaction Test</option><option value="snake">Snake</option></select><select id="difficultySel" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div><div id="game">Pick a game</div></aside>
 </div>
 <footer>Free realtime chat powered by Supabase (Postgres + Realtime). Keep it friendly ✨</footer>
 </div>
@@ -141,8 +141,8 @@ const OWNER_PASS='ServerHostPanel'
 const REACTIONS=['👍','❤️','😂','😮','😢','😡']
 const COLORS=['#ffffff','#22d3ee','#f43f5e','#a3e635','#f59e0b','#8b5cf6']
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
-const els={status:document.getElementById('status'),input:document.getElementById('input'),send:document.getElementById('send'),messages:document.getElementById('messages'),name:document.getElementById('name'),online:document.getElementById('online'),globalOnline:document.getElementById('globalOnline'),roomsList:document.getElementById('roomsList'),roomsUpdated:document.getElementById('roomsUpdated'),roomInput:document.getElementById('roomInput'),switchRoom:document.getElementById('switchRoom'),adminLocked:document.getElementById('adminLocked'),adminControls:document.getElementById('adminControls'),pass:document.getElementById('pass'),unlock:document.getElementById('unlock'),pauseBtn:document.getElementById('pauseBtn'),unpauseBtn:document.getElementById('unpauseBtn'),clearBtn:document.getElementById('clearBtn'),discoBtn:document.getElementById('discoBtn'),pauseState:document.getElementById('pauseState'),roomNameLabel:document.getElementById('roomNameLabel'),pausePill:document.getElementById('pausePill'),targetNick:document.getElementById('targetNick'),kickBtn:document.getElementById('kickBtn'),muteBtn:document.getElementById('muteBtn'),unmuteBtn:document.getElementById('unmuteBtn'),blocker:document.getElementById('blocker'),announce:document.getElementById('announce'),announceText:document.getElementById('announceText'),announceBy:document.getElementById('announceBy'),announceAt:document.getElementById('announceAt'),announceInput:document.getElementById('announceInput'),setAnnBtn:document.getElementById('setAnnBtn'),clrAnnBtn:document.getElementById('clrAnnBtn'),pinList:document.getElementById('pinList'),banTerm:document.getElementById('banTerm'),addBan:document.getElementById('addBan'),delBan:document.getElementById('delBan'),banList:document.getElementById('banList'),ownerOnly:document.getElementById('ownerOnly'),banNick:document.getElementById('banNick'),banBtn:document.getElementById('banBtn'),unbanBtn:document.getElementById('unbanBtn'),bannedList:document.getElementById('bannedList'),colorRow:document.getElementById('colorRow'),gameSel:document.getElementById('gameSel'),game:document.getElementById('game'),fxPulse:document.getElementById('fxPulse'),fxShake:document.getElementById('fxShake'),fxConfetti:document.getElementById('fxConfetti')}
-let state={room:localStorage.getItem('room')||'global',name:localStorage.getItem('nickname')||'',userId:localStorage.getItem('uid')||crypto.randomUUID(),role:'guest',roomChannel:null,admin:false,paused:false,pausedBy:null,pausedName:null,discoTimer:null,mutedNicks:new Set(),kicked:false,pins:[],reactions:new Map(),bannedTerms:new Set(),banned:false,color:localStorage.getItem('color')||COLORS[0],presenceTimer:null}
+const els={status:document.getElementById('status'),input:document.getElementById('input'),send:document.getElementById('send'),messages:document.getElementById('messages'),name:document.getElementById('name'),online:document.getElementById('online'),globalOnline:document.getElementById('globalOnline'),roomsList:document.getElementById('roomsList'),roomsUpdated:document.getElementById('roomsUpdated'),roomInput:document.getElementById('roomInput'),switchRoom:document.getElementById('switchRoom'),adminLocked:document.getElementById('adminLocked'),adminControls:document.getElementById('adminControls'),pass:document.getElementById('pass'),unlock:document.getElementById('unlock'),pauseBtn:document.getElementById('pauseBtn'),unpauseBtn:document.getElementById('unpauseBtn'),clearBtn:document.getElementById('clearBtn'),discoBtn:document.getElementById('discoBtn'),pauseState:document.getElementById('pauseState'),roomNameLabel:document.getElementById('roomNameLabel'),pausePill:document.getElementById('pausePill'),targetNick:document.getElementById('targetNick'),kickBtn:document.getElementById('kickBtn'),muteBtn:document.getElementById('muteBtn'),unmuteBtn:document.getElementById('unmuteBtn'),blocker:document.getElementById('blocker'),announce:document.getElementById('announce'),announceText:document.getElementById('announceText'),announceBy:document.getElementById('announceBy'),announceAt:document.getElementById('announceAt'),announceInput:document.getElementById('announceInput'),setAnnBtn:document.getElementById('setAnnBtn'),clrAnnBtn:document.getElementById('clrAnnBtn'),pinList:document.getElementById('pinList'),banTerm:document.getElementById('banTerm'),addBan:document.getElementById('addBan'),delBan:document.getElementById('delBan'),banList:document.getElementById('banList'),ownerOnly:document.getElementById('ownerOnly'),banNick:document.getElementById('banNick'),banBtn:document.getElementById('banBtn'),unbanBtn:document.getElementById('unbanBtn'),bannedList:document.getElementById('bannedList'),colorRow:document.getElementById('colorRow'),gameSel:document.getElementById('gameSel'),diffSel:document.getElementById('difficultySel'),game:document.getElementById('game'),fxPulse:document.getElementById('fxPulse'),fxShake:document.getElementById('fxShake'),fxConfetti:document.getElementById('fxConfetti')}
+let state={room:localStorage.getItem('room')||'global',name:localStorage.getItem('nickname')||'',userId:localStorage.getItem('uid')||crypto.randomUUID(),role:'guest',roomChannel:null,admin:false,paused:false,pausedBy:null,pausedName:null,discoTimer:null,mutedNicks:new Set(),kicked:false,pins:[],reactions:new Map(),bannedTerms:new Set(),banned:false,color:localStorage.getItem('color')||COLORS[0],presenceTimer:null,currentGame:'rps'}
 const rendered=new Set()
 const msgKey=m=>`${m.user_id}|${m.created_at}|${m.text}`
 const norm=s=>(s||'').trim().toLowerCase()
@@ -159,38 +159,7 @@ async function toggleReaction(messageId,emoji){const map=state.reactions.get(mes
 function trimUI(){const nodes=[...els.messages.querySelectorAll('.msg')];const extra=nodes.length-MAX_MSGS;for(let i=0;i<extra;i++)nodes[i].remove();els.messages.scrollTop=els.messages.scrollHeight}
 function clearUI(){els.messages.innerHTML='';rendered.clear()}
 function addIfNew(m){const k=msgKey(m);if(rendered.has(k))return;rendered.add(k);renderMsg(m);trimUI()}
-// --- replace your setRole with this ---
-function setRole(role){
-  state.role = role;
-  state.admin = role === 'admin' || role === 'owner';
-  // force visibility explicitly
-  els.adminLocked.style.display   = state.admin ? 'none'  : '';
-  els.adminControls.style.display = state.admin ? 'block' : 'none';
-  els.ownerOnly.style.display     = role === 'owner' ? 'block' : 'none';
-}
-
-// --- replace your roleFromPass with this ---
-function roleFromPass(p){
-  const v = (p || '').trim();
-  if (!v) return null;
-  if (v === OWNER_PASS || v.toLowerCase() === OWNER_PASS.toLowerCase()) return 'owner';
-  if (v === ADMIN_PASS || v.toLowerCase() === ADMIN_PASS.toLowerCase()) return 'admin';
-  return null;
-}
-
-// --- add this helper + listeners (or replace your existing unlock listener) ---
-function unlockAdmin(){
-  const role = roleFromPass(els.pass.value);
-  if (role){
-    setRole(role);
-    els.pass.value = '';
-  } else {
-    alert('Wrong passcode');
-  }
-}
-els.unlock.addEventListener('click', unlockAdmin);
-els.pass.addEventListener('keydown', e => { if (e.key === 'Enter') unlockAdmin(); });
-
+function setRole(role){state.role=role;state.admin=role==='admin'||role==='owner';els.adminLocked.style.display=state.admin?'none':'';els.adminControls.style.display=state.admin?'block':'none';els.ownerOnly.style.display=role==='owner'?'block':'none'}
 function setPaused(p,byId=null,byName=null){state.paused=!!p;state.pausedBy=byId;state.pausedName=byName;const who=state.paused?(state.pausedName?`paused by ${escapeHtml(state.pausedName)}`:'paused'):'active';els.pauseState.textContent=who;els.pausePill.style.background=state.paused?'#fde68a':'rgba(255,255,255,.08)';updateComposerDisabled()}
 function updateComposerDisabled(){const blocked=(state.paused&&state.userId!==state.pausedBy)||state.kicked||state.mutedNicks.has(norm(state.name))||state.banned;els.input.disabled=blocked;els.send.disabled=blocked;if(state.kicked){els.input.placeholder='You were kicked. Refresh to rejoin.'}else if(state.banned){els.input.placeholder='You are banned.'}else if(state.mutedNicks.has(norm(state.name))){els.input.placeholder='You are muted by admin.'}else if(state.paused&&state.userId!==state.pausedBy){els.input.placeholder='Chat is paused by admin.'}else{els.input.placeholder='Type a message… (Shift+Enter = newline)'}}
 function updateMuteList(){const arr=Array.from(state.mutedNicks.values());document.getElementById('muteList').textContent=arr.length?`Muted: ${arr.join(', ')}`:'Muted: (none)';updateComposerDisabled()}
@@ -214,122 +183,107 @@ async function loadReactionsFor(ids){if(!ids.length)return;const{data,error}=awa
 async function checkBan(){const{data}=await supabase.from('banned_users').select('user_id').eq('user_id',state.userId).maybeSingle();state.banned=!!data;updateComposerDisabled()}
 async function heartbeat(){const now=new Date().toISOString();await supabase.from('presence').upsert({user_id:state.userId,name:state.name||'anon',room:state.room,updated_at:now});}
 async function refreshRooms(){const cutoff=new Date(Date.now()-90*1000).toISOString();const{data:all}=await supabase.from('presence').select('user_id').gt('updated_at',cutoff);els.globalOnline.textContent=`${new Set((all||[]).map(r=>r.user_id)).size} online (global)`;const{data:rooms}=await supabase.from('presence').select('room,user_id').gt('updated_at',cutoff);const counts=new Map();(rooms||[]).forEach(r=>{counts.set(r.room,(counts.get(r.room)||new Set()).add(r.user_id))});els.roomsList.innerHTML='';[...counts.entries()].sort((a,b)=>b[1].size-a[1].size).forEach(([room,set])=>{const d=document.createElement('span');d.className='roomPill';d.textContent=`#${room} · ${set.size}`;d.addEventListener('click',()=>joinRoom(room));els.roomsList.appendChild(d)});els.roomsUpdated.textContent=new Date().toLocaleTimeString()}
-async function joinRoom(newRoom){if(state.roomChannel){await supabase.removeChannel(state.roomChannel);state.roomChannel=null}clearUI();state.kicked=false;document.getElementById('blocker').style.display='none';state.room=(newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');localStorage.setItem('room',state.room);els.roomInput.value=state.room;document.getElementById('roomNameLabel').textContent=state.room;state.roomChannel=supabase.channel(`room:${state.room}`,{config:{presence:{key:state.userId}}});state.roomChannel.on('presence',{event:'sync'},()=>{const pres=state.roomChannel.presenceState();const users=new Set();for(const k in pres){pres[k].forEach(v=>users.add(v.userId))}document.getElementById('online').textContent=`${users.size} online`});if(PERSIST){state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room=eq.${state.room}`},payload=>addIfNew(payload.new));state.roomChannel.on('postgres_changes',{event:'*',schema:'public',table:'room_state',filter:`room=eq.${state.room}`},payload=>{const row=payload.new||payload.old||{};setPaused(!!row.paused,row.paused_by||null,row.paused_name||null);state.mutedNicks=new Set((row.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(row.announcement_text||'',row.announcement_by||'',row.announcement_at||'')});state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({new:r})=>{const map=state.reactions.get(r.message_id)||{};map[r.emoji]=map[r.emoji]||new Set();map[r.emoji].add(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)});state.roomChannel.on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({old:r})=>{const map=state.reactions.get(r.message_id)||{};if(map[r.emoji])map[r.emoji].delete(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)})}
-state.roomChannel.on('broadcast',{event:'msg'},({payload})=>addIfNew(payload));state.roomChannel.on('broadcast',{event:'admin'},({payload})=>{if(payload?.type==='clear'){clearUI();sys('Chat cleared by admin')}if(payload?.type==='pause'){setPaused(true,payload.by||null,payload.name||'admin')}if(payload?.type==='unpause'){setPaused(false,null,null)}if(payload?.type==='disco'){startDisco(payload.duration||10000)}if(payload?.type==='kick'&&norm(state.name)===norm(payload.nick)){showBlocker()}if(payload?.type==='muted'){state.mutedNicks.add(norm(payload.nick));updateMuteList()}if(payload?.type==='unmuted'){state.mutedNicks.delete(norm(payload.nick));updateMuteList()}if(payload?.type==='announce'){renderAnnouncement(payload.text||'',payload.by||'admin',new Date().toISOString())}if(payload?.type==='ban'&&payload.user_id===state.userId){state.banned=true;updateComposerDisabled();alert('You have been banned by the owner.');}if(payload?.type==='unban'&&payload.user_id===state.userId){state.banned=false;updateComposerDisabled();sys('You were unbanned')}});state.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{const id=payload.message_id;const map=state.reactions.get(id)||{};map[payload.emoji]=map[payload.emoji]||new Set();if(payload.op==='add')map[payload.emoji].add(payload.user_id);else map[payload.emoji].delete(payload.user_id);state.reactions.set(id,map);renderReactions(id)});state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{if(payload.fx==='pulse')startPulse(payload.duration||8000);if(payload.fx==='shake')startShake(payload.duration||5000);if(payload.fx==='confetti')startConfetti(payload.duration||5000)});await state.roomChannel.subscribe(async s=>{if(s==='SUBSCRIBED'){state.roomChannel.track({userId:state.userId,name:state.name||'anon',room:state.room});await loadRecent();await loadRoomState();await loadBannedTerms();await checkBan();loadPins();renderSwatches();sys(`Joined #${state.room}`);await heartbeat();await refreshRooms();clearInterval(state.presenceTimer);state.presenceTimer=setInterval(async()=>{await heartbeat();},20000)}})}
-/* ==== PART 2 — games, owner ban/unban, events, init ==== */
-function renderSwatches(){
-els.colorRow.innerHTML='';
-COLORS.forEach(c=>{
-  const d=document.createElement('div');
-  d.className='swatch';
-  d.style.background=c;
-  d.dataset.c=c;
-  if(state.color===c)d.classList.add('sel');
-  d.addEventListener('click',()=>{state.color=c;localStorage.setItem('color',c);renderSwatches()});
-  els.colorRow.appendChild(d);
-});
-}
-function gameRPS(){
-  const el=document.createElement('div');
-  const out=document.createElement('div');
-  const row=document.createElement('div');
-  ['Rock','Paper','Scissors'].forEach((t,i)=>{
-    const b=document.createElement('button');
-    b.className='btn';
-    b.textContent=t;
-    b.addEventListener('click',()=>{
-      const me=i;const ai=Math.floor(Math.random()*3);
-      const m=['🪨','📄','✂️'][me],a=['🪨','📄','✂️'][ai];
-      const w=(me===ai)?'Draw':(me===0&&ai===2||me===1&&ai===0||me===2&&ai===1)?'You win!':'You lose';
-      out.textContent=`You ${m} vs ${a} • ${w}`;
-    });
-    row.appendChild(b);
-  });
-  el.appendChild(row);el.appendChild(out);
-  els.game.innerHTML='';els.game.appendChild(el);
-}
-function gameTTT(){
-  const el=document.createElement('div');el.className='ttt';
-  let board=Array(9).fill('');const cells=[];
-  function win(b){const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];for(const [a,c,d]of L){if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a]}return b.every(x=>x)?'draw':null}
-  function ai(){let idx=board.findIndex(x=>!x);if(idx>-1){board[idx]='O';cells[idx].textContent='O'}}
-  function click(i){if(board[i]||win(board))return;board[i]='X';cells[i].textContent='X';let r=win(board);if(r){els.game.querySelectorAll('button').forEach(b=>b.disabled=true);return}ai();r=win(board);if(r){els.game.querySelectorAll('button').forEach(b=>b.disabled=true)}}
-  for(let i=0;i<9;i++){const b=document.createElement('button');b.addEventListener('click',()=>click(i));cells.push(b);el.appendChild(b)}
-  els.game.innerHTML='';els.game.appendChild(el);
-}
-function gameGuess(){
-  const el=document.createElement('div');let n=Math.floor(Math.random()*100)+1;let tries=0;
-  const input=document.createElement('input');input.type='number';input.placeholder='1..100';input.style.marginRight='8px';
-  const btn=document.createElement('button');btn.className='btn';btn.textContent='Guess';
-  const out=document.createElement('div');
-  btn.addEventListener('click',()=>{const v=+input.value;if(!v)return;tries++;out.textContent=v===n?`Correct in ${tries}!`:(v<n?'Higher':'Lower')});
-  el.appendChild(input);el.appendChild(btn);el.appendChild(out);
-  els.game.innerHTML='';els.game.appendChild(el);
-}
-function gameMem(){
-  const el=document.createElement('div');el.className='mem';
-  const faces=['🍎','🍌','🍇','🍓'];let arr=faces.concat(faces).sort(()=>Math.random()-.5);
-  let picks=[];let matched=new Set();
-  arr.forEach((f,i)=>{const b=document.createElement('button');b.textContent='?';b.addEventListener('click',()=>{if(matched.has(i)||picks.includes(i))return;b.textContent=f;picks.push(i);if(picks.length===2){const[a,bx]=picks;setTimeout(()=>{if(arr[a]===arr[bx]){matched.add(a);matched.add(bx)}else{el.children[a].textContent='?';el.children[bx].textContent='?'}picks=[];if(matched.size===arr.length){els.game.innerHTML='You matched all!'}},500)}});el.appendChild(b)});
-  els.game.innerHTML='';els.game.appendChild(el);
-}
-function gameReact(){
-  const box=document.createElement('div');
-  box.style.width='100%';box.style.height='120px';box.style.borderRadius='8px';
-  box.style.display='flex';box.style.alignItems='center';box.style.justifyContent='center';box.style.userSelect='none';
-  const btn=document.createElement('button');btn.className='btn';btn.textContent='Start';
-  const out=document.createElement('div');out.style.marginLeft='10px';
-  let t=null,armed=false,timer=null,early=false;
-  function reset(){armed=false;early=false;box.style.background='transparent';btn.disabled=false;btn.textContent='Start';out.textContent=''}
-  btn.addEventListener('click',()=>{btn.disabled=true;out.textContent='Wait for green…';box.style.background='#5b1b1b';timer=setTimeout(()=>{box.style.background='#1b5b2a';t=performance.now();armed=true;out.textContent='Click!'},800+Math.random()*2000)});
-  function handle(){if(!btn.disabled)return;if(early){reset();return}if(!armed){out.textContent='Too soon!';early=true;clearTimeout(timer);setTimeout(reset,800);return}const ms=Math.round(performance.now()-t);out.textContent=`${ms} ms`;setTimeout(reset,800)}
-  box.addEventListener('click',handle);btn.addEventListener('click',e=>e.stopPropagation());
-  els.game.innerHTML='';const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.alignItems='center';wrap.appendChild(btn);wrap.appendChild(out);els.game.appendChild(wrap);els.game.appendChild(box);
-}
-function loadGame(k){if(k==='rps')gameRPS();else if(k==='ttt')gameTTT();else if(k==='guess')gameGuess();else if(k==='mem')gameMem();else if(k==='react')gameReact()}
 async function loadRecent(){try{if(!PERSIST)return;clearUI();const{data,error}=await supabase.from('messages').select('*').eq('room',state.room).order('created_at',{ascending:false}).limit(MAX_MSGS);if(error){console.error(error);sys('Failed to load history');return}const list=(data||[]).reverse();list.forEach(addIfNew);const ids=list.map(m=>msgKey(m));await loadReactionsFor(ids)}catch(e){console.error('loadRecent failed',e)}}
 async function send(){try{const raw=els.input.value;const text=(raw||'').trim();if(!text)return;if(text.length>300){alert('Max 300 characters');return}if(state.kicked){alert('You were kicked. Refresh to rejoin.');return}if(state.banned){alert('You are banned.');return}if(state.mutedNicks.has(norm(state.name))&&!state.admin){alert('You are muted by admin.');return}if(state.paused&&state.userId!==state.pausedBy){alert(`Chat is paused by ${state.pausedName||'admin'}.`);return}if(violatesModeration(text)){alert('Message blocked by moderation.');return}const name=(els.name.value||'anon').slice(0,20);els.name.value=name;state.name=name;localStorage.setItem('nickname',name);localStorage.setItem('uid',state.userId);const msg={room:state.room,user_id:state.userId,name,text,created_at:new Date().toISOString(),color:state.color};els.input.value='';state.roomChannel?.send({type:'broadcast',event:'msg',payload:msg});addIfNew(msg);if(PERSIST){const{error}=await supabase.from('messages').insert(msg);if(error)console.error(error)}}catch(e){console.error('send failed',e)}}
-async function lookupUserIdByNick(nick){
-  const {data}=await supabase.from('presence').select('user_id,name,updated_at');
-  const target=(data||[]).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).find(r=>norm(r.name)===norm(nick));
-  return target?target.user_id:null;
+function roleFromPass(p){const v=(p||'').trim();if(!v)return null;if(v===OWNER_PASS||v.toLowerCase()===OWNER_PASS.toLowerCase())return'owner';if(v===ADMIN_PASS||v.toLowerCase()===ADMIN_PASS.toLowerCase())return'admin';return null}
+document.getElementById('unlock').addEventListener('click',()=>{const role=roleFromPass(els.pass.value);if(role){setRole(role);els.pass.value=''}else alert('Wrong passcode')})
+els.pass.addEventListener('keydown',e=>{if(e.key==='Enter'){const role=roleFromPass(els.pass.value);if(role){setRole(role);els.pass.value=''}else alert('Wrong passcode')}})
+document.getElementById('pauseBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,paused:true,paused_by:state.userId,paused_name:state.name||'anon',updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Pause failed (check table & policies).')}else{setPaused(true,state.userId,state.name||'anon');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'pause',by:state.userId,name:state.name||'anon'}})}})
+document.getElementById('unpauseBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,paused:false,paused_by:null,paused_name:null,updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Unpause failed (check table & policies).')}else{setPaused(false,null,null);state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'unpause'}})}})
+document.getElementById('clearBtn').addEventListener('click',async()=>{if(!state.admin)return;if(!confirm('Clear ALL messages in #'+state.room+'?'))return;const{error}=await supabase.from('messages').delete().eq('room',state.room);if(error){console.error(error);alert('Clear failed (need DELETE policy).')}else{clearUI();sys('Chat cleared.');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'clear'}})}})
+document.getElementById('discoBtn').addEventListener('click',()=>{if(!state.admin)return;const duration=10000;startDisco(duration);state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'disco',duration}})})
+els.fxPulse?.addEventListener('click',()=>{if(!state.admin)return;startPulse(8000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'pulse',duration:8000}})})
+els.fxShake?.addEventListener('click',()=>{if(!state.admin)return;startShake(5000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'shake',duration:5000}})})
+els.fxConfetti?.addEventListener('click',()=>{if(!state.admin)return;startConfetti(5000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'confetti',duration:5000}})})
+document.getElementById('kickBtn').addEventListener('click',()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'kick',nick}});sys(`Kicked ${nick}`)})
+async function setMuted(nicks){const uniq=Array.from(new Set(nicks.map(norm))).filter(Boolean);const row={room:state.room,muted_nicks:uniq,paused:state.paused,paused_by:state.pausedBy,paused_name:state.pausedName,announcement_text:els.announceText.textContent||null,announcement_by:els.announceBy.textContent||null,announcement_at:els.announceText.textContent?new Date().toISOString():null,updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Failed to update mute list (check table & policies).')}}
+document.getElementById('muteBtn').addEventListener('click',async()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.mutedNicks.add(nick);updateMuteList();state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'muted',nick}});await setMuted(Array.from(state.mutedNicks))})
+document.getElementById('unmuteBtn').addEventListener('click',async()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.mutedNicks.delete(nick);updateMuteList();state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'unmuted',nick}});await setMuted(Array.from(state.mutedNicks))})
+document.getElementById('setAnnBtn').addEventListener('click',async()=>{if(!state.admin)return;const text=document.getElementById('announceInput').value.trim();if(!text)return alert('Type an announcement');const row={room:state.room,announcement_text:text,announcement_by:state.name||'admin',announcement_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Set announcement failed (check table & policies).')}else{renderAnnouncement(text,state.name||'admin',new Date());state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'announce',text,by:state.name||'admin'}})}})
+document.getElementById('clrAnnBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,announcement_text:null,announcement_by:null,announcement_at:null};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Clear announcement failed')}else{renderAnnouncement('','','');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'announce',text:'',by:''}})}})
+els.addBan.addEventListener('click',async()=>{if(!state.admin)return;const termRaw=els.banTerm.value.trim();if(!termRaw)return alert('Enter a term');const term=termRaw.toLowerCase();const{error}=await supabase.from('banned_terms').insert({term});if(error){console.error(error);alert('Failed to add term')}else{els.banTerm.value='';await loadBannedTerms()}})
+els.delBan.addEventListener('click',async()=>{if(!state.admin)return;const termRaw=els.banTerm.value.trim();if(!termRaw)return alert('Enter a term');const term=termRaw.toLowerCase();const{error}=await supabase.from('banned_terms').delete().eq('term',term);if(error){console.error(error);alert('Failed to remove term')}else{els.banTerm.value='';await loadBannedTerms()}})
+function renderSwatches(){els.colorRow.innerHTML='';COLORS.forEach(c=>{const d=document.createElement('div');d.className='swatch';d.style.background=c;d.dataset.c=c;if(state.color===c)d.classList.add('sel');d.addEventListener('click',()=>{state.color=c;localStorage.setItem('color',c);renderSwatches()});els.colorRow.appendChild(d)})}
+async function lookupUserIdByNick(nick){const{data}=await supabase.from('presence').select('user_id,name,updated_at');const target=(data||[]).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).find(r=>norm(r.name)===norm(nick));return target?target.user_id:null}
+async function refreshBannedList(){const{data}=await supabase.from('banned_users').select('user_id,name').order('created_at',{ascending:false});els.bannedList.textContent=(data&&data.length)?`Banned: ${data.map(r=>r.name||r.user_id).join(', ')}`:'Banned: (none)'}
+els.banBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid)return alert('User not found online.');const{error}=await supabase.from('banned_users').upsert({user_id:uid,name:nick});if(error){console.error(error);alert('Ban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'ban',user_id:uid}});await refreshBannedList();}})
+els.unbanBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid){const{data}=await supabase.from('banned_users').select('user_id,name');const row=(data||[]).find(r=>norm(r.name)===nick);if(row)uid=row.user_id}if(!uid)return alert('Could not resolve user to unban');const{error}=await supabase.from('banned_users').delete().eq('user_id',uid);if(error){console.error(error);alert('Unban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unban',user_id:uid}});await refreshBannedList();}})
+async function joinRoom(newRoom){if(state.roomChannel){await supabase.removeChannel(state.roomChannel);state.roomChannel=null}clearUI();state.kicked=false;document.getElementById('blocker').style.display='none';state.room=(newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');localStorage.setItem('room',state.room);els.roomInput.value=state.room;document.getElementById('roomNameLabel').textContent=state.room;state.roomChannel=supabase.channel(`room:${state.room}`,{config:{presence:{key:state.userId}}});state.roomChannel.on('presence',{event:'sync'},()=>{const pres=state.roomChannel.presenceState();const users=new Set();for(const k in pres){pres[k].forEach(v=>users.add(v.userId))}document.getElementById('online').textContent=`${users.size} online`});if(PERSIST){state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room=eq.${state.room}`},payload=>addIfNew(payload.new));state.roomChannel.on('postgres_changes',{event:'*',schema:'public',table:'room_state',filter:`room=eq.${state.room}`},payload=>{const row=payload.new||payload.old||{};setPaused(!!row.paused,row.paused_by||null,row.paused_name||null);state.mutedNicks=new Set((row.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(row.announcement_text||'',row.announcement_by||'',row.announcement_at||'')});state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({new:r})=>{const map=state.reactions.get(r.message_id)||{};map[r.emoji]=map[r.emoji]||new Set();map[r.emoji].add(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)});state.roomChannel.on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({old:r})=>{const map=state.reactions.get(r.message_id)||{};if(map[r.emoji])map[r.emoji].delete(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)})}
+state.roomChannel.on('broadcast',{event:'msg'},({payload})=>addIfNew(payload));state.roomChannel.on('broadcast',{event:'admin'},({payload})=>{if(payload?.type==='clear'){clearUI();sys('Chat cleared by admin')}if(payload?.type==='pause'){setPaused(true,payload.by||null,payload.name||'admin')}if(payload?.type==='unpause'){setPaused(false,null,null)}if(payload?.type==='disco'){startDisco(payload.duration||10000)}if(payload?.type==='kick'&&norm(state.name)===norm(payload.nick)){showBlocker()}if(payload?.type==='muted'){state.mutedNicks.add(norm(payload.nick));updateMuteList()}if(payload?.type==='unmuted'){state.mutedNicks.delete(norm(payload.nick));updateMuteList()}if(payload?.type==='announce'){renderAnnouncement(payload.text||'',payload.by||'admin',new Date().toISOString())}if(payload?.type==='ban'&&payload.user_id===state.userId){state.banned=true;updateComposerDisabled();alert('You have been banned by the owner.');}if(payload?.type==='unban'&&payload.user_id===state.userId){state.banned=false;updateComposerDisabled();sys('You were unbanned')}});state.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{const id=payload.message_id;const map=state.reactions.get(id)||{};map[payload.emoji]=map[payload.emoji]||new Set();if(payload.op==='add')map[payload.emoji].add(payload.user_id);else map[payload.emoji].delete(payload.user_id);state.reactions.set(id,map);renderReactions(id)});state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{if(payload.fx==='pulse')startPulse(payload.duration||8000);if(payload.fx==='shake')startShake(payload.duration||5000);if(payload.fx==='confetti')startConfetti(payload.duration||5000)});await state.roomChannel.subscribe(async s=>{if(s==='SUBSCRIBED'){state.roomChannel.track({userId:state.userId,name:state.name||'anon',room:state.room});await loadRecent();await loadRoomState();await loadBannedTerms();await checkBan();loadPins();renderSwatches();sys(`Joined #${state.room}`);await heartbeat();await refreshRooms();clearInterval(state.presenceTimer);state.presenceTimer=setInterval(async()=>{await heartbeat();},20000)}})}
+setStatus('Ready');document.getElementById('name').value=state.name;setRole('guest');renderSwatches();joinRoom(state.room);window.addEventListener('beforeunload',()=>{supabase.from('presence').delete().eq('user_id',state.userId)})
+const presenceChan=supabase.channel('presence-global');presenceChan.on('postgres_changes',{event:'*',schema:'public',table:'presence'},()=>{refreshRooms()});presenceChan.subscribe();setInterval(()=>{refreshRooms()},15000)
+/* ==== PART 2 — Games + Difficulty + Snake (<=200 lines) ==== */
+function setGameContent(node,cleanup){if(els.game.currentCleanup){try{els.game.currentCleanup()}catch{}els.game.currentCleanup=null}els.game.innerHTML='';els.game.appendChild(node);els.game.currentCleanup=cleanup||null}
+function diff(){const v=(els.diffSel?.value)||'normal';if(v==='easy')return{snakeSpeed:130,snakeSize:14,guessMax:50,memPairs:4};if(v==='hard')return{snakeSpeed:70,snakeSize:12,guessMax:500,memPairs:8};return{snakeSpeed:100,snakeSize:12,guessMax:100,memPairs:6}}
+function gameRPS(){const el=document.createElement('div'),out=document.createElement('div'),row=document.createElement('div');['Rock','Paper','Scissors'].forEach((t,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=()=>{const me=i,ai=Math.floor(Math.random()*3);const m=['🪨','📄','✂️'][me],a=['🪨','📄','✂️'][ai];const w=me===ai?'Draw':(me===0&&ai===2||me===1&&ai===0||me===2&&ai===1)?'You win!':'You lose';out.textContent=`You ${m} vs ${a} • ${w}`};row.appendChild(b)});el.append(row,out);setGameContent(el)}
+function gameTTT(){const el=document.createElement('div');el.className='ttt';let b=Array(9).fill(''),cells=[];const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];const win=bb=>{for(const[a,c,d]of L){if(bb[a]&&bb[a]===bb[c]&&bb[a]===bb[d])return bb[a]}return bb.every(x=>x)?'draw':null};const ai=()=>{let i=b.findIndex(x=>!x);if(i>-1){b[i]='O';cells[i].textContent='O'}};const click=i=>{if(b[i]||win(b))return;b[i]='X';cells[i].textContent='X';let r=win(b);if(r){el.querySelectorAll('button').forEach(x=>x.disabled=true);return}ai();r=win(b);if(r)el.querySelectorAll('button').forEach(x=>x.disabled=true)};for(let i=0;i<9;i++){const bt=document.createElement('button');bt.onclick=()=>click(i);cells.push(bt);el.appendChild(bt)}setGameContent(el)}
+function gameGuess(){const cfg=diff(),el=document.createElement('div'),inp=document.createElement('input'),btn=document.createElement('button'),out=document.createElement('div');let n=Math.floor(Math.random()*cfg.guessMax)+1,tries=0;inp.type='number';inp.placeholder=`1..${cfg.guessMax}`;inp.style.marginRight='8px';btn.className='btn';btn.textContent='Guess';btn.onclick=()=>{const v=+inp.value;if(!v)return;tries++;out.textContent=v===n?`Correct in ${tries}!`:(v<n?'Higher':'Lower')};el.append(inp,btn,out);setGameContent(el)}
+function gameMem(){const cfg=diff(),el=document.createElement('div');el.className='mem';const pool=['🍎','🍌','🍇','🍓','🍑','🍍','🥝','🥕','🌽','🍆','🥦','🥑'];const faces=pool.slice(0,cfg.memPairs);let arr=faces.concat(faces).sort(()=>Math.random()-.5),picks=[],matched=new Set();arr.forEach((f,i)=>{const b=document.createElement('button');b.textContent='?';b.onclick=()=>{if(matched.has(i)||picks.includes(i))return;b.textContent=f;picks.push(i);if(picks.length===2){const[a,c]=picks;setTimeout(()=>{if(arr[a]===arr[c]){matched.add(a);matched.add(c)}else{el.children[a].textContent='?';el.children[c].textContent='?'}picks=[];if(matched.size===arr.length)els.game.innerHTML='You matched all!'},400)}};el.appendChild(b)});setGameContent(el)}
+function gameReact(){const box=document.createElement('div');box.style.cssText='width:100%;height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;user-select:none';const btn=document.createElement('button');btn.className='btn';btn.textContent='Start';const out=document.createElement('div');out.style.marginLeft='10px';let t=null,armed=false,timer=null,early=false;const reset=()=>{armed=false;early=false;box.style.background='transparent';btn.disabled=false;btn.textContent='Start';out.textContent=''};btn.onclick=()=>{btn.disabled=true;out.textContent='Wait for green…';box.style.background='#5b1b1b';timer=setTimeout(()=>{box.style.background='#1b5b2a';t=performance.now();armed=true;out.textContent='Click!'},800+Math.random()*2000)};const handle=()=>{if(!btn.disabled)return;if(early){reset();return}if(!armed){out.textContent='Too soon!';early=true;clearTimeout(timer);setTimeout(reset,800);return}out.textContent=`${Math.round(performance.now()-t)} ms`;setTimeout(reset,800)};box.onclick=handle;btn.addEventListener('click',e=>e.stopPropagation());const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.alignItems='center';wrap.append(btn,out);const root=document.createElement('div');root.append(wrap,box);setGameContent(root)}
+function gameSnake(){const cfg=diff(),wrap=document.createElement('div');wrap.style.cssText='width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center';const canvas=document.createElement('canvas');const H=240,SIZE=cfg.snakeSize,W=Math.min(els.game.clientWidth-20,820);canvas.width=Math.floor(W/SIZE)*SIZE;canvas.height=Math.floor(H/SIZE)*SIZE;canvas.style.cssText='background:#111a2e;border-radius:10px;border:1px solid rgba(255,255,255,.2)';const hint=document.createElement('div');hint.className='hint';hint.style.marginTop='8px';hint.textContent='Arrows/WASD • Space to restart';wrap.append(canvas,hint);const ctx=canvas.getContext('2d');let dir={x:1,y:0},nextDir={x:1,y:0},snake=[{x:4,y:4},{x:3,y:4},{x:2,y:4}],food=spawn(),timer=null,over=false;function spawn(){const cx=canvas.width/SIZE,cy=canvas.height/SIZE;let p;do{p={x:Math.floor(Math.random()*cx),y:Math.floor(Math.random()*cy)}}while(snake.some(s=>s.x===p.x&&s.y===p.y));return p}function cell(x,y,c){ctx.fillStyle=c;ctx.fillRect(x*SIZE,y*SIZE,SIZE-1,SIZE-1)}function render(){ctx.clearRect(0,0,canvas.width,canvas.height);cell(food.x,food.y,'#f59e0b');snake.forEach((s,i)=>cell(s.x,s.y,i?'#22d3ee':'#34d399'))}function tick(){dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y},cx=canvas.width/SIZE,cy=canvas.height/SIZE;if(head.x<0||head.y<0||head.x>=cx||head.y>=cy||snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return}snake.unshift(head);if(head.x===food.x&&head.y===food.y){food=spawn()}else snake.pop();render()}function gameOver(){over=true;clearInterval(timer);ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.font='bold 20px system-ui,sans-serif';ctx.fillText('Game Over — Space',16,28)}function onKey(e){const k=e.key.toLowerCase();if(k==='arrowup'||k==='w'){if(dir.y!==1)nextDir={x:0,y:-1}}else if(k==='arrowdown'||k==='s'){if(dir.y!==-1)nextDir={x:0,y:1}}else if(k==='arrowleft'||k==='a'){if(dir.x!==1)nextDir={x:-1,y:0}}else if(k==='arrowright'||k==='d'){if(dir.x!==-1)nextDir={x:1,y:0}}else if(k===' '&&over){over=false;dir={x:1,y:0};nextDir=dir;snake=[{x:4,y:4},{x:3,y:4},{x:2,y:4}];food=spawn();clearInterval(timer);timer=setInterval(tick,cfg.snakeSpeed);render()}}window.addEventListener('keydown',onKey);timer=setInterval(tick,cfg.snakeSpeed);render();const cleanup=()=>{window.removeEventListener('keydown',onKey);clearInterval(timer)};setGameContent(wrap,cleanup)}
+function loadGame(k){try{state.currentGame=k}catch{}if(k==='rps')gameRPS();else if(k==='ttt')gameTTT();else if(k==='guess')gameGuess();else if(k==='mem')gameMem();else if(k==='react')gameReact();else if(k==='snake')gameSnake()}
+els.gameSel.addEventListener('change',e=>loadGame(e.target.value));els.diffSel?.addEventListener('change',()=>loadGame((state&&state.currentGame)||els.gameSel.value));try{loadGame(els.gameSel.value)}catch{}
+/* ==== PART 3 — messaging wiring & small fixes (<=200 lines) ==== */
+function bindMessagingControls(){
+  if (els._bound) return; els._bound = true;
+
+  // Send on button click
+  els.send.addEventListener('click', send);
+
+  // Send on Enter (Shift+Enter = newline)
+  els.input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  // Join room by button or Enter in input
+  els.switchRoom.addEventListener('click', () => joinRoom(els.roomInput.value));
+  els.roomInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') joinRoom(els.roomInput.value);
+  });
+
+  // Keep nickname & color persisted
+  els.name.addEventListener('change', () => {
+    const n = (els.name.value || 'anon').slice(0, 20);
+    els.name.value = n;
+    state.name = n;
+    localStorage.setItem('nickname', n);
+    updateComposerDisabled();
+    heartbeat().catch(()=>{});
+  });
+
+  // Make sure composer state reflects current role/room flags
+  updateComposerDisabled();
+
+  // Owner list refresh at boot
+  refreshBannedList().catch(()=>{});
+
+  // Status helpers
+  window.addEventListener('online',  () => setStatus('Online'));
+  window.addEventListener('offline', () => setStatus('Offline'));
 }
-async function refreshBannedList(){
-  const {data}=await supabase.from('banned_users').select('user_id,name').order('created_at',{ascending:false});
-  els.bannedList.textContent=(data&&data.length)?`Banned: ${data.map(r=>r.name||r.user_id).join(', ')}`:'Banned: (none)';
-}
-els.banBtn.addEventListener('click',async()=>{
-  if(state.role!=='owner'){alert('Owner only');return}
-  const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');
-  let uid=await lookupUserIdByNick(nick);if(!uid)return alert('User not found online.');
-  const {error}=await supabase.from('banned_users').upsert({user_id:uid,name:nick});
-  if(error){console.error(error);alert('Ban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'ban',user_id:uid}});await refreshBannedList();}
-});
-els.unbanBtn.addEventListener('click',async()=>{
-  if(state.role!=='owner'){alert('Owner only');return}
-  const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');
-  let uid=await lookupUserIdByNick(nick);
-  if(!uid){const {data}=await supabase.from('banned_users').select('user_id,name');const row=(data||[]).find(r=>norm(r.name)===nick);if(row)uid=row.user_id}
-  if(!uid)return alert('Could not resolve user to unban');
-  const {error}=await supabase.from('banned_users').delete().eq('user_id',uid);
-  if(error){console.error(error);alert('Unban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unban',user_id:uid}});await refreshBannedList();}
-});
-els.gameSel.addEventListener('change',e=>loadGame(e.target.value));
-els.send.addEventListener('click',send);
-els.input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
-els.switchRoom.addEventListener('click',()=>joinRoom(els.roomInput.value));
-setStatus('Ready');
-document.getElementById('name').value=state.name;
-setRole('guest');
-renderSwatches();
-joinRoom(state.room);
-window.addEventListener('beforeunload',()=>{supabase.from('presence').delete().eq('user_id',state.userId)});
-const presenceChan=supabase.channel('presence-global');
-presenceChan.on('postgres_changes',{event:'*',schema:'public',table:'presence'},()=>{refreshRooms()});
-presenceChan.subscribe();
-setInterval(()=>{refreshRooms()},15000);
-(async()=>{await refreshBannedList();})();
-/* ==== END PART 2 ==== */
+
+// In case PARTs load out-of-order, retry binding until DOM is ready
+(function ensureBound(){
+  try { bindMessagingControls(); } catch { /* ignore */ }
+  setTimeout(ensureBound, 300);
+})();
+
+/* Optional debug helpers — comment out if you like */
+window.__chatDebug = {
+  state,
+  pause(){ setPaused(true, state.userId, state.name||'admin'); },
+  unpause(){ setPaused(false, null, null); },
+  blocked(){ return {
+    paused: state.paused && state.userId !== state.pausedBy,
+    kicked: state.kicked,
+    muted: state.mutedNicks.has((state.name||'').trim().toLowerCase()),
+    banned: state.banned
+  };}
+};
+
 </script>
 </body>
 </html>
