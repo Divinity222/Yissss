@@ -139,7 +139,23 @@ const MAX_MSGS=15
 const ADMIN_PASS='DivinePermissions'
 const OWNER_PASS='ServerHostPanel'
 const REACTIONS=['👍','❤️','😂','😮','😢','😡']
-const COLORS=['#ffffff','#22d3ee','#f43f5e','#a3e635','#f59e0b','#8b5cf6']
+const COLORS = [
+  '#ffffff', // White
+  '#cbd5e1', // Light Gray
+  '#facc15', // Yellow
+  '#fb923c', // Orange
+  '#22d3ee', // Cyan
+  '#38bdf8', // Sky
+  '#3b82f6', // Blue
+  '#8b5cf6', // Violet
+  '#a78bfa', // Light Violet
+  '#ec4899', // Pink
+  '#f472b6', // Light Pink
+  '#f43f5e', // Rose
+  '#10b981', // Emerald
+  '#a3e635', // Lime
+  '#f59e0b', // Amber
+];
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
 const els={status:document.getElementById('status'),input:document.getElementById('input'),send:document.getElementById('send'),messages:document.getElementById('messages'),name:document.getElementById('name'),online:document.getElementById('online'),globalOnline:document.getElementById('globalOnline'),roomsList:document.getElementById('roomsList'),roomsUpdated:document.getElementById('roomsUpdated'),roomInput:document.getElementById('roomInput'),switchRoom:document.getElementById('switchRoom'),adminLocked:document.getElementById('adminLocked'),adminControls:document.getElementById('adminControls'),pass:document.getElementById('pass'),unlock:document.getElementById('unlock'),pauseBtn:document.getElementById('pauseBtn'),unpauseBtn:document.getElementById('unpauseBtn'),clearBtn:document.getElementById('clearBtn'),discoBtn:document.getElementById('discoBtn'),pauseState:document.getElementById('pauseState'),roomNameLabel:document.getElementById('roomNameLabel'),pausePill:document.getElementById('pausePill'),targetNick:document.getElementById('targetNick'),kickBtn:document.getElementById('kickBtn'),muteBtn:document.getElementById('muteBtn'),unmuteBtn:document.getElementById('unmuteBtn'),blocker:document.getElementById('blocker'),announce:document.getElementById('announce'),announceText:document.getElementById('announceText'),announceBy:document.getElementById('announceBy'),announceAt:document.getElementById('announceAt'),announceInput:document.getElementById('announceInput'),setAnnBtn:document.getElementById('setAnnBtn'),clrAnnBtn:document.getElementById('clrAnnBtn'),pinList:document.getElementById('pinList'),banTerm:document.getElementById('banTerm'),addBan:document.getElementById('addBan'),delBan:document.getElementById('delBan'),banList:document.getElementById('banList'),ownerOnly:document.getElementById('ownerOnly'),banNick:document.getElementById('banNick'),banBtn:document.getElementById('banBtn'),unbanBtn:document.getElementById('unbanBtn'),bannedList:document.getElementById('bannedList'),colorRow:document.getElementById('colorRow'),gameSel:document.getElementById('gameSel'),diffSel:document.getElementById('difficultySel'),game:document.getElementById('game'),fxPulse:document.getElementById('fxPulse'),fxShake:document.getElementById('fxShake'),fxConfetti:document.getElementById('fxConfetti')}
 let state={room:localStorage.getItem('room')||'global',name:localStorage.getItem('nickname')||'',userId:localStorage.getItem('uid')||crypto.randomUUID(),role:'guest',roomChannel:null,admin:false,paused:false,pausedBy:null,pausedName:null,discoTimer:null,mutedNicks:new Set(),kicked:false,pins:[],reactions:new Map(),bannedTerms:new Set(),banned:false,color:localStorage.getItem('color')||COLORS[0],presenceTimer:null,currentGame:'rps'}
