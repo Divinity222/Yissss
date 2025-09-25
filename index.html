@@ -313,6 +313,10 @@ state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{
     case 'fireworks': startFireworks(d); break;
   }
 });
+['fxEmoji','fxSnow','fxFireworks'].forEach(id => {
+  els[id] = document.getElementById(id);
+});
+
 document.getElementById('kickBtn').addEventListener('click',()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'kick',nick}});sys(`Kicked ${nick}`)})
 async function setMuted(nicks){const uniq=Array.from(new Set(nicks.map(norm))).filter(Boolean);const row={room:state.room,muted_nicks:uniq,paused:state.paused,paused_by:state.pausedBy,paused_name:state.pausedName,announcement_text:els.announceText.textContent||null,announcement_by:els.announceBy.textContent||null,announcement_at:els.announceText.textContent?new Date().toISOString():null,updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Failed to update mute list (check table & policies).')}}
 document.getElementById('muteBtn').addEventListener('click',async()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.mutedNicks.add(nick);updateMuteList();state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'muted',nick}});await setMuted(Array.from(state.mutedNicks))})
