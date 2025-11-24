@@ -84,6 +84,128 @@ body.shake{animation:fxShake .1s linear infinite}
 #roomsCard{padding:10px}
 #roomsList{display:flex;flex-wrap:wrap;gap:8px}
 .roomPill{padding:6px 10px;border-radius:999px;background:#0b1226;border:1px solid rgba(255,255,255,.12);font-size:12px}
+
+/* === Festive holiday themes === */
+body[class*="holiday-"] {
+  transition: background 0.6s ease, filter 0.6s ease;
+}
+
+/* Christmas 🎄 */
+body.holiday-christmas {
+  --accent: #22c55e;
+  --ann: #f97373;
+  background:
+    radial-gradient(circle at top, rgba(248, 250, 252, 0.15) 0, transparent 55%),
+    linear-gradient(180deg, #022c22, #020617);
+  box-shadow: inset 0 0 80px rgba(148, 163, 184, 0.4);
+}
+body.holiday-christmas::before {
+  content: "🎄 Happy Holidays 🎄";
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  z-index: 9997;
+}
+
+/* Halloween 🎃 */
+body.holiday-halloween {
+  --accent: #f97316;
+  --ann: #f97316;
+  background:
+    radial-gradient(circle at top, rgba(248, 250, 252, 0.1) 0, transparent 50%),
+    linear-gradient(180deg, #020617, #111827, #4c1d95);
+  box-shadow: inset 0 0 80px rgba(24, 24, 27, 0.8);
+  filter: saturate(1.1);
+}
+body.holiday-halloween::before {
+  content: "🎃 Spooky Season 🎃";
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(251, 146, 60, 0.6);
+  z-index: 9997;
+}
+
+/* Thanksgiving 🦃 */
+body.holiday-thanksgiving {
+  --accent: #f59e0b;
+  --ann: #f97316;
+  background:
+    radial-gradient(circle at top, rgba(248, 250, 252, 0.1) 0, transparent 55%),
+    linear-gradient(180deg, #451a03, #7c2d12, #111827);
+  box-shadow: inset 0 0 80px rgba(120, 53, 15, 0.7);
+}
+body.holiday-thanksgiving::before {
+  content: "🦃 Happy Thanksgiving 🦃";
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(245, 158, 11, 0.7);
+  z-index: 9997;
+}
+
+/* Easter 🐣 */
+body.holiday-easter {
+  --accent: #a855f7;
+  --ann: #f97316;
+  background:
+    radial-gradient(circle at top, rgba(251, 113, 133, 0.15) 0, transparent 55%),
+    radial-gradient(circle at bottom, rgba(52, 211, 153, 0.2) 0, transparent 55%),
+    linear-gradient(180deg, #0f172a, #581c87);
+  filter: saturate(1.2);
+}
+body.holiday-easter::before {
+  content: "🐣 Happy Easter 🐣";
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(216, 180, 254, 0.7);
+  z-index: 9997;
+}
+
+/* Valentine's Day 💘 */
+body.holiday-valentines {
+  --accent: #ec4899;
+  --ann: #f97373;
+  background:
+    radial-gradient(circle at top, rgba(251, 113, 133, 0.2) 0, transparent 55%),
+    linear-gradient(180deg, #4a044e, #1f2937);
+  filter: saturate(1.25);
+}
+body.holiday-valentines::before {
+  content: "💘 Happy Valentine's Day 💘";
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(251, 113, 133, 0.8);
+  z-index: 9997;
+}
 </style>
 <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3ctext y='14' font-size='14'%3e%F0%9F%92%AC%3c/text%3e%3c/svg%3e" />
 </head>
@@ -122,11 +244,27 @@ body.shake{animation:fxShake .1s linear infinite}
 <hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="targetNick" type="text" placeholder="Nickname (case-insensitive)" /><div class="btn-row"><button id="kickBtn" class="btn danger">Kick</button><button id="muteBtn" class="btn warn">Mute</button><button id="unmuteBtn" class="btn">Unmute</button></div><div id="muteList" class="small"></div></div>
 <hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="announceInput" type="text" placeholder="Announcement text" /><div class="btn-row"><button id="setAnnBtn" class="btn">Set announcement</button><button id="clrAnnBtn" class="btn danger">Clear announcement</button></div></div>
 <hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="banTerm" type="text" placeholder="Add banned term (admin)" /><div class="btn-row"><button id="addBan" class="btn warn">Add term</button><button id="delBan" class="btn">Remove term</button></div><div id="banList" class="small"></div></div>
+
+<hr style="opacity:.15">
+<div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
+  <div class="small">
+    Festive mode
+    <span class="pill" style="margin-left:6px">Active: <strong id="holidayActive">off</strong></span>
+  </div>
+  <select id="holidaySelect" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)">
+    <!-- options are populated by JS -->
+  </select>
+  <div class="btn-row">
+    <button id="holidayApply" class="btn">Apply festive theme</button>
+    <button id="holidayClear" class="btn warn">Clear festive theme</button>
+  </div>
+</div>
+
 <hr style="opacity:.15"><div id="ownerOnly" style="display:none" class="row"><div style="width:100%"><div class="small">Owner tools</div><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="banNick" type="text" placeholder="Ban by nickname (current online)" /><div class="btn-row"><button id="banBtn" class="btn danger">Ban</button><button id="unbanBtn" class="btn">Unban</button></div><div id="bannedList" class="small"></div></div></div></div>
 </div>
 </aside>
-<aside id="pins" class="card"><h3>Pinned (max 5)</h3><div class="hint">Double‑click any message to pin. Double‑click a pin to unpin.</div><div id="pinList"></div></aside>
-<aside id="fun" class="card"><h3>Fun & Style</h3><div class="row" id="colorRow"></div><div class="row controls"><select id="gameSel"><option value="rps">Rock • Paper • Scissors</option><option value="ttt">Tic‑Tac‑Toe</option><option value="guess">Number Guess</option><option value="mem">Memory Match</option><option value="react">Reaction Test</option><option value="snake">Snake</option></select><select id="difficultySel" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div><div id="game">Pick a game</div></aside>
+<aside id="pins" class="card"><h3>Pinned (max 5)</h3><div class="hint">Double-click any message to pin. Double-click a pin to unpin.</div><div id="pinList"></div></aside>
+<aside id="fun" class="card"><h3>Fun & Style</h3><div class="row" id="colorRow"></div><div class="row controls"><select id="gameSel"><option value="rps">Rock • Paper • Scissors</option><option value="ttt">Tic-Tac-Toe</option><option value="guess">Number Guess</option><option value="mem">Memory Match</option><option value="react">Reaction Test</option><option value="snake">Snake</option></select><select id="difficultySel" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div><div id="game">Pick a game</div></aside>
 </div>
 <footer>Free realtime chat powered by Supabase (Postgres + Realtime). Keep it friendly ✨</footer>
 </div>
@@ -156,9 +294,40 @@ const COLORS = [
   '#a3e635', // Lime
   '#f59e0b', // Amber
 ];
+
+const HOLIDAYS = {
+  none:      { label: 'Off',            emoji: '⏹️' },
+  christmas: { label: 'Christmas',      emoji: '🎄' },
+  halloween: { label: 'Halloween',      emoji: '🎃' },
+  thanksgiving: { label: 'Thanksgiving', emoji: '🦃' },
+  easter:    { label: 'Easter',         emoji: '🐣' },
+  valentines:{ label: "Valentine's Day", emoji: '💘' }
+};
+
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
 const els={status:document.getElementById('status'),input:document.getElementById('input'),send:document.getElementById('send'),messages:document.getElementById('messages'),name:document.getElementById('name'),online:document.getElementById('online'),globalOnline:document.getElementById('globalOnline'),roomsList:document.getElementById('roomsList'),roomsUpdated:document.getElementById('roomsUpdated'),roomInput:document.getElementById('roomInput'),switchRoom:document.getElementById('switchRoom'),adminLocked:document.getElementById('adminLocked'),adminControls:document.getElementById('adminControls'),pass:document.getElementById('pass'),unlock:document.getElementById('unlock'),pauseBtn:document.getElementById('pauseBtn'),unpauseBtn:document.getElementById('unpauseBtn'),clearBtn:document.getElementById('clearBtn'),discoBtn:document.getElementById('discoBtn'),pauseState:document.getElementById('pauseState'),roomNameLabel:document.getElementById('roomNameLabel'),pausePill:document.getElementById('pausePill'),targetNick:document.getElementById('targetNick'),kickBtn:document.getElementById('kickBtn'),muteBtn:document.getElementById('muteBtn'),unmuteBtn:document.getElementById('unmuteBtn'),blocker:document.getElementById('blocker'),announce:document.getElementById('announce'),announceText:document.getElementById('announceText'),announceBy:document.getElementById('announceBy'),announceAt:document.getElementById('announceAt'),announceInput:document.getElementById('announceInput'),setAnnBtn:document.getElementById('setAnnBtn'),clrAnnBtn:document.getElementById('clrAnnBtn'),pinList:document.getElementById('pinList'),banTerm:document.getElementById('banTerm'),addBan:document.getElementById('addBan'),delBan:document.getElementById('delBan'),banList:document.getElementById('banList'),ownerOnly:document.getElementById('ownerOnly'),banNick:document.getElementById('banNick'),banBtn:document.getElementById('banBtn'),unbanBtn:document.getElementById('unbanBtn'),bannedList:document.getElementById('bannedList'),colorRow:document.getElementById('colorRow'),gameSel:document.getElementById('gameSel'),diffSel:document.getElementById('difficultySel'),game:document.getElementById('game'),fxPulse:document.getElementById('fxPulse'),fxShake:document.getElementById('fxShake'),fxConfetti:document.getElementById('fxConfetti')}
-let state={room:localStorage.getItem('room')||'global',name:localStorage.getItem('nickname')||'',userId:localStorage.getItem('uid')||crypto.randomUUID(),role:'guest',roomChannel:null,admin:false,paused:false,pausedBy:null,pausedName:null,discoTimer:null,mutedNicks:new Set(),kicked:false,pins:[],reactions:new Map(),bannedTerms:new Set(),banned:false,color:localStorage.getItem('color')||COLORS[0],presenceTimer:null,currentGame:'rps'}
+let state={
+  room:localStorage.getItem('room')||'global',
+  name:localStorage.getItem('nickname')||'',
+  userId:localStorage.getItem('uid')||crypto.randomUUID(),
+  role:'guest',
+  roomChannel:null,
+  admin:false,
+  paused:false,
+  pausedBy:null,
+  pausedName:null,
+  discoTimer:null,
+  mutedNicks:new Set(),
+  kicked:false,
+  pins:[],
+  reactions:new Map(),
+  bannedTerms:new Set(),
+  banned:false,
+  color:localStorage.getItem('color')||COLORS[0],
+  presenceTimer:null,
+  currentGame:'rps',
+  holiday:'none'
+}
 const rendered=new Set()
 const msgKey=m=>`${m.user_id}|${m.created_at}|${m.text}`
 const norm=s=>(s||'').trim().toLowerCase()
@@ -169,7 +338,7 @@ function normalizeForModeration(s){if(!s)return'';let t=s.toLowerCase();t=t.repl
 function violatesModeration(text){const n=normalizeForModeration(text);for(const term of state.bannedTerms){if(n.includes(term))return true}return false}
 function maskModeration(text){return violatesModeration(text)?'🚫 [filtered]':text}
 function escapeHtml(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]))}
-function renderMsg(m){const wrap=document.createElement('div');const mine=m.user_id===state.userId;const id=msgKey(m);wrap.className='msg'+(mine?' me':'');wrap.dataset.id=id;const meta=document.createElement('div');meta.className='meta';const when=new Date(m.created_at||Date.now());meta.innerHTML=`<strong>${escapeHtml(m.name||'anon')}</strong> · ${when.toLocaleString()}${mine?' · you':''}`;const text=document.createElement('div');text.className='text';text.style.color=m.color||'';text.textContent=maskModeration(m.text);const rxn=document.createElement('div');rxn.className='reactions';REACTIONS.forEach(e=>{const b=document.createElement('span');b.className='rxn';b.dataset.emoji=e;b.textContent=e;b.addEventListener('click',()=>toggleReaction(id,e));rxn.appendChild(b)});wrap.appendChild(meta);wrap.appendChild(text);wrap.appendChild(rxn);wrap.title='Double‑click to pin';wrap.addEventListener('dblclick',()=>pinMessage(m));els.messages.appendChild(wrap);renderReactions(id)}
+function renderMsg(m){const wrap=document.createElement('div');const mine=m.user_id===state.userId;const id=msgKey(m);wrap.className='msg'+(mine?' me':'');wrap.dataset.id=id;const meta=document.createElement('div');meta.className='meta';const when=new Date(m.created_at||Date.now());meta.innerHTML=`<strong>${escapeHtml(m.name||'anon')}</strong> · ${when.toLocaleString()}${mine?' · you':''}`;const text=document.createElement('div');text.className='text';text.style.color=m.color||'';text.textContent=maskModeration(m.text);const rxn=document.createElement('div');rxn.className='reactions';REACTIONS.forEach(e=>{const b=document.createElement('span');b.className='rxn';b.dataset.emoji=e;b.textContent=e;b.addEventListener('click',()=>toggleReaction(id,e));rxn.appendChild(b)});wrap.appendChild(meta);wrap.appendChild(text);wrap.appendChild(rxn);wrap.title='Double-click to pin';wrap.addEventListener('dblclick',()=>pinMessage(m));els.messages.appendChild(wrap);renderReactions(id)}
 function renderReactions(id){const wrap=els.messages.querySelector(`.msg[data-id="${CSS.escape(id)}"]`);if(!wrap)return;const bar=wrap.querySelector('.reactions');const map=state.reactions.get(id)||{};[...bar.children].forEach(node=>{const emo=node.dataset.emoji;const set=map[emo]||new Set();node.textContent=`${emo} ${set.size||''}`.trim();if(set.has(state.userId))node.classList.add('mine');else node.classList.remove('mine')})}
 async function toggleReaction(messageId,emoji){const map=state.reactions.get(messageId)||{};map[emoji]=map[emoji]||new Set();const has=map[emoji].has(state.userId);if(has){map[emoji].delete(state.userId);state.reactions.set(messageId,map);renderReactions(messageId);await supabase.from('message_reactions').delete().match({room:state.room,message_id:messageId,emoji,user_id:state.userId});state.roomChannel.send({type:'broadcast',event:'rxn',payload:{op:'del',message_id:messageId,emoji,user_id:state.userId}})}else{map[emoji].add(state.userId);state.reactions.set(messageId,map);renderReactions(messageId);await supabase.from('message_reactions').insert({room:state.room,message_id:messageId,emoji,user_id:state.userId});state.roomChannel.send({type:'broadcast',event:'rxn',payload:{op:'add',message_id:messageId,emoji,user_id:state.userId}})}}
 function trimUI(){const nodes=[...els.messages.querySelectorAll('.msg')];const extra=nodes.length-MAX_MSGS;for(let i=0;i<extra;i++)nodes[i].remove();els.messages.scrollTop=els.messages.scrollHeight}
@@ -190,8 +359,8 @@ const pinsKey=()=>`pins:${state.room}`
 function loadPins(){try{state.pins=JSON.parse(localStorage.getItem(pinsKey())||'[]')}catch{state.pins=[]}renderPins()}
 function savePins(){localStorage.setItem(pinsKey(),JSON.stringify(state.pins))}
 function renderPins(){els.pinList.innerHTML='';if(!state.pins.length){const p=document.createElement('div');p.className='hint';p.textContent='No pins yet';els.pinList.appendChild(p);return}state.pins.forEach(addPinDOM)}
-function addPinDOM(p){const d=document.createElement('div');d.className='pin';d.dataset.id=p.id;d.innerHTML=`<div class="meta"><strong>${escapeHtml(p.name)}</strong> · ${new Date(p.created_at).toLocaleString()}</div><div class="text">${escapeHtml(p.text)}</div>`;d.title='Double‑click to unpin';d.addEventListener('dblclick',()=>unpin(p.id));els.pinList.appendChild(d)}
-function pinMessage(m){const id=msgKey(m);if(state.pins.find(x=>x.id===id))return;if(state.pins.length>=5){alert('Pin board is full (max 5). Double‑click a pin to remove.');return}const item={id,name:m.name||'anon',text:maskModeration(m.text),created_at:m.created_at||new Date().toISOString()};state.pins.push(item);savePins();renderPins()}
+function addPinDOM(p){const d=document.createElement('div');d.className='pin';d.dataset.id=p.id;d.innerHTML=`<div class="meta"><strong>${escapeHtml(p.name)}</strong> · ${new Date(p.created_at).toLocaleString()}</div><div class="text">${escapeHtml(p.text)}</div>`;d.title='Double-click to unpin';d.addEventListener('dblclick',()=>unpin(p.id));els.pinList.appendChild(d)}
+function pinMessage(m){const id=msgKey(m);if(state.pins.find(x=>x.id===id))return;if(state.pins.length>=5){alert('Pin board is full (max 5). Double-click a pin to remove.');return}const item={id,name:m.name||'anon',text:maskModeration(m.text),created_at:m.created_at||new Date().toISOString()};state.pins.push(item);savePins();renderPins()}
 function unpin(id){state.pins=state.pins.filter(p=>p.id!==id);savePins();renderPins()}
 async function loadRoomState(){const{data,error}=await supabase.from('room_state').select('paused, paused_by, paused_name, muted_nicks, announcement_text, announcement_by, announcement_at').eq('room',state.room).maybeSingle();if(!error&&data){setPaused(!!data.paused,data.paused_by||null,data.paused_name||null);state.mutedNicks=new Set((data.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(data.announcement_text||'',data.announcement_by||'',data.announcement_at||'')}else{setPaused(false,null,null);state.mutedNicks=new Set();updateMuteList();renderAnnouncement('','','')}}
 async function loadBannedTerms(){const{data,error}=await supabase.from('banned_terms').select('term');if(!error&&data){state.bannedTerms=new Set(data.map(r=>norm(r.term)))}else{state.bannedTerms=new Set()}updateBanList()}
@@ -224,8 +393,83 @@ async function lookupUserIdByNick(nick){const{data}=await supabase.from('presenc
 async function refreshBannedList(){const{data}=await supabase.from('banned_users').select('user_id,name').order('created_at',{ascending:false});els.bannedList.textContent=(data&&data.length)?`Banned: ${data.map(r=>r.name||r.user_id).join(', ')}`:'Banned: (none)'}
 els.banBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid)return alert('User not found online.');const{error}=await supabase.from('banned_users').upsert({user_id:uid,name:nick});if(error){console.error(error);alert('Ban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'ban',user_id:uid}});await refreshBannedList();}})
 els.unbanBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid){const{data}=await supabase.from('banned_users').select('user_id,name');const row=(data||[]).find(r=>norm(r.name)===nick);if(row)uid=row.user_id}if(!uid)return alert('Could not resolve user to unban');const{error}=await supabase.from('banned_users').delete().eq('user_id',uid);if(error){console.error(error);alert('Unban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unban',user_id:uid}});await refreshBannedList();}})
+
+function applyHoliday(id){
+  id = id || 'none';
+  state.holiday = id;
+
+  // Remove previous holiday classes
+  document.body.classList.forEach(c => {
+    if (c.startsWith('holiday-')) document.body.classList.remove(c);
+  });
+
+  if (id !== 'none') {
+    document.body.classList.add(`holiday-${id}`);
+  }
+
+  const labelEl = document.getElementById('holidayActive');
+  if (labelEl) {
+    const meta = HOLIDAYS[id] || { label:id, emoji:'' };
+    labelEl.textContent = id === 'none' ? 'off' : `${meta.emoji || ''} ${meta.label}`.trim();
+  }
+}
+
+function initHolidayControls(){
+  const sel = document.getElementById('holidaySelect');
+  const applyBtn = document.getElementById('holidayApply');
+  const clearBtn = document.getElementById('holidayClear');
+
+  if (!sel || !applyBtn || !clearBtn) return;
+  if (sel._holidayInit) return;
+  sel._holidayInit = true;
+
+  sel.innerHTML = '';
+  Object.entries(HOLIDAYS).forEach(([id, cfg]) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = (cfg.emoji ? cfg.emoji + ' ' : '') + cfg.label;
+    sel.appendChild(opt);
+  });
+  sel.value = state.holiday || 'none';
+  applyHoliday(state.holiday || 'none');
+
+  applyBtn.addEventListener('click', () => {
+    if (!state.admin) return;
+    const val = sel.value || 'none';
+    applyHoliday(val);
+    state.roomChannel?.send({
+      type:'broadcast',
+      event:'admin',
+      payload:{ type:'holiday', theme:val }
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (!state.admin) return;
+    sel.value = 'none';
+    applyHoliday('none');
+    state.roomChannel?.send({
+      type:'broadcast',
+      event:'admin',
+      payload:{ type:'holiday', theme:'none' }
+    });
+  });
+}
+
 async function joinRoom(newRoom){if(state.roomChannel){await supabase.removeChannel(state.roomChannel);state.roomChannel=null}clearUI();state.kicked=false;document.getElementById('blocker').style.display='none';state.room=(newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');localStorage.setItem('room',state.room);els.roomInput.value=state.room;document.getElementById('roomNameLabel').textContent=state.room;state.roomChannel=supabase.channel(`room:${state.room}`,{config:{presence:{key:state.userId}}});state.roomChannel.on('presence',{event:'sync'},()=>{const pres=state.roomChannel.presenceState();const users=new Set();for(const k in pres){pres[k].forEach(v=>users.add(v.userId))}document.getElementById('online').textContent=`${users.size} online`});if(PERSIST){state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room=eq.${state.room}`},payload=>addIfNew(payload.new));state.roomChannel.on('postgres_changes',{event:'*',schema:'public',table:'room_state',filter:`room=eq.${state.room}`},payload=>{const row=payload.new||payload.old||{};setPaused(!!row.paused,row.paused_by||null,row.paused_name||null);state.mutedNicks=new Set((row.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(row.announcement_text||'',row.announcement_by||'',row.announcement_at||'')});state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({new:r})=>{const map=state.reactions.get(r.message_id)||{};map[r.emoji]=map[r.emoji]||new Set();map[r.emoji].add(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)});state.roomChannel.on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({old:r})=>{const map=state.reactions.get(r.message_id)||{};if(map[r.emoji])map[r.emoji].delete(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)})}
-state.roomChannel.on('broadcast',{event:'msg'},({payload})=>addIfNew(payload));state.roomChannel.on('broadcast',{event:'admin'},({payload})=>{if(payload?.type==='clear'){clearUI();sys('Chat cleared by admin')}if(payload?.type==='pause'){setPaused(true,payload.by||null,payload.name||'admin')}if(payload?.type==='unpause'){setPaused(false,null,null)}if(payload?.type==='disco'){startDisco(payload.duration||10000)}if(payload?.type==='kick'&&norm(state.name)===norm(payload.nick)){showBlocker()}if(payload?.type==='muted'){state.mutedNicks.add(norm(payload.nick));updateMuteList()}if(payload?.type==='unmuted'){state.mutedNicks.delete(norm(payload.nick));updateMuteList()}if(payload?.type==='announce'){renderAnnouncement(payload.text||'',payload.by||'admin',new Date().toISOString())}if(payload?.type==='ban'&&payload.user_id===state.userId){state.banned=true;updateComposerDisabled();alert('You have been banned by the owner.');}if(payload?.type==='unban'&&payload.user_id===state.userId){state.banned=false;updateComposerDisabled();sys('You were unbanned')}});state.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{const id=payload.message_id;const map=state.reactions.get(id)||{};map[payload.emoji]=map[payload.emoji]||new Set();if(payload.op==='add')map[payload.emoji].add(payload.user_id);else map[payload.emoji].delete(payload.user_id);state.reactions.set(id,map);renderReactions(id)});state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{if(payload.fx==='pulse')startPulse(payload.duration||8000);if(payload.fx==='shake')startShake(payload.duration||5000);if(payload.fx==='confetti')startConfetti(payload.duration||5000)});await state.roomChannel.subscribe(async s=>{if(s==='SUBSCRIBED'){state.roomChannel.track({userId:state.userId,name:state.name||'anon',room:state.room});await loadRecent();await loadRoomState();await loadBannedTerms();await checkBan();loadPins();renderSwatches();sys(`Joined #${state.room}`);await heartbeat();await refreshRooms();clearInterval(state.presenceTimer);state.presenceTimer=setInterval(async()=>{await heartbeat();},20000)}})}
+state.roomChannel.on('broadcast',{event:'msg'},({payload})=>addIfNew(payload));state.roomChannel.on('broadcast',{event:'admin'},({payload})=>{
+  if(payload?.type==='clear'){clearUI();sys('Chat cleared by admin')}
+  if(payload?.type==='pause'){setPaused(true,payload.by||null,payload.name||'admin')}
+  if(payload?.type==='unpause'){setPaused(false,null,null)}
+  if(payload?.type==='disco'){startDisco(payload.duration||10000)}
+  if(payload?.type==='kick'&&norm(state.name)===norm(payload.nick)){showBlocker()}
+  if(payload?.type==='muted'){state.mutedNicks.add(norm(payload.nick));updateMuteList()}
+  if(payload?.type==='unmuted'){state.mutedNicks.delete(norm(payload.nick));updateMuteList()}
+  if(payload?.type==='announce'){renderAnnouncement(payload.text||'',payload.by||'admin',new Date().toISOString())}
+  if(payload?.type==='ban'&&payload.user_id===state.userId){state.banned=true;updateComposerDisabled();alert('You have been banned by the owner.');}
+  if(payload?.type==='unban'&&payload.user_id===state.userId){state.banned=false;updateComposerDisabled();sys('You were unbanned')}
+  if(payload?.type==='holiday'){applyHoliday(payload.theme || 'none')}
+});state.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{const id=payload.message_id;const map=state.reactions.get(id)||{};map[payload.emoji]=map[payload.emoji]||new Set();if(payload.op==='add')map[payload.emoji].add(payload.user_id);else map[payload.emoji].delete(payload.user_id);state.reactions.set(id,map);renderReactions(id)});state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{if(payload.fx==='pulse')startPulse(payload.duration||8000);if(payload.fx==='shake')startShake(payload.duration||5000);if(payload.fx==='confetti')startConfetti(payload.duration||5000)});await state.roomChannel.subscribe(async s=>{if(s==='SUBSCRIBED'){state.roomChannel.track({userId:state.userId,name:state.name||'anon',room:state.room});await loadRecent();await loadRoomState();await loadBannedTerms();await checkBan();loadPins();renderSwatches();sys(`Joined #${state.room}`);await heartbeat();await refreshRooms();clearInterval(state.presenceTimer);state.presenceTimer=setInterval(async()=>{await heartbeat();},20000)}})}
 setStatus('Ready');document.getElementById('name').value=state.name;setRole('guest');renderSwatches();joinRoom(state.room);window.addEventListener('beforeunload',()=>{supabase.from('presence').delete().eq('user_id',state.userId)})
 const presenceChan=supabase.channel('presence-global');presenceChan.on('postgres_changes',{event:'*',schema:'public',table:'presence'},()=>{refreshRooms()});presenceChan.subscribe();setInterval(()=>{refreshRooms()},15000)
 /* ==== PART 2 — Games + Difficulty + Snake (<=200 lines) ==== */
@@ -275,6 +519,9 @@ function bindMessagingControls(){
 
   // Owner list refresh at boot
   refreshBannedList().catch(()=>{});
+
+  // Festive controls
+  initHolidayControls();
 
   // Status helpers
   window.addEventListener('online',  () => setStatus('Online'));
