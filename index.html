@@ -4,549 +4,1036 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Global Chat — Supabase</title>
-<style>
-:root{--bg:#0f172a;--panel:#111827;--accent:#22d3ee;--muted:#94a3b8;--text:#e5e7eb;--ann:#f59e0b}
-*{box-sizing:border-box}
-body{margin:0;font:16px system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:linear-gradient(180deg,#0b1025,#0f172a);color:var(--text);display:flex;min-height:100vh}
-.container{max-width:1320px;margin:0 auto;flex:1;display:flex;flex-direction:column;padding:16px;gap:12px}
-header{display:flex;align-items:center;gap:10px}
-header h1{margin:0;font-size:20px;letter-spacing:.3px}
-header .badge{padding:4px 8px;border-radius:999px;background:#0ea5a5;font-size:12px}
-.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-#room{padding:10px 14px;display:flex;align-items:center;gap:8px}
-#room input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
-#room button,.btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#001018;font-weight:700;cursor:pointer}
-.layout{display:grid;grid-template-columns:220px 1fr 300px 300px;gap:12px;min-height:0}
-@media (max-width:1320px){.layout{grid-template-columns:220px 1fr 300px}}
-@media (max-width:1024px){.layout{grid-template-columns:1fr}}
-#rules{padding:12px;display:flex;flex-direction:column;gap:8px}
-#rules h3{margin:0;font-size:14px}
-#rules ol{margin:0;padding-left:18px;color:#cbd5e1;line-height:1.35}
-#chat{display:flex;min-height:0;gap:12px;flex-direction:column}
-#messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.msg{padding:10px 12px;border-radius:12px;background:#0b1226;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;cursor:pointer}
-.meta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
-.me .meta strong{color:#a7f3d0}
-.text{line-height:1.4;white-space:pre-wrap;word-wrap:anywhere}
-.sys{text-align:center;font-size:12px;color:var(--muted);margin:8px 0}
-#composer{padding:10px;display:flex;gap:8px}
-#composer input[type="text"]{width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
-#composer textarea{flex:1;min-height:44px;max-height:120px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;resize:vertical;color:var(--text)}
-#composer button{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#001018;font-weight:700;cursor:pointer}
-footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
-.row{display:flex;gap:12px;align-items:center}
-.grow{flex:1}
-#announce{display:none;position:sticky;top:0;z-index:2;margin:0 12px;padding:12px;border-radius:12px;background:linear-gradient(90deg,rgba(245,158,11,.18),rgba(245,158,11,.08));border:1px solid var(--ann);box-shadow:0 4px 20px rgba(245,158,11,.15)}
-#announce .label{font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:.06em;color:#fff;background:var(--ann);padding:2px 8px;border-radius:999px;display:inline-block;margin-bottom:6px}
-#announce .txt{font-size:15px}
-#announce .who{font-size:12px;color:#ffd79a;margin-top:6px}
-#admin{padding:12px;display:flex;flex-direction:column;gap:10px}
-#admin h3{margin:0;font-size:14px;letter-spacing:.2px}
-#admin .small{font-size:12px;color:var(--muted)}
-#admin input[type="password"],#admin input[type="text"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
-#admin .btn-row{display:flex;gap:8px;flex-wrap:wrap}
-.pill{padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
-.danger{background:#fca5a5;color:#220}
-.warn{background:#fde68a;color:#221}
-#muteList,#banList{font-size:12px;color:var(--muted)}
-#pins{padding:12px;display:flex;flex-direction:column;gap:10px}
-#pins h3{margin:0;font-size:14px}
-#pinList{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow:auto}
-.pin{padding:10px 12px;border-radius:12px;background:#0b1226;border:1px solid rgba(255,255,255,.12);cursor:pointer}
-.pin .meta{font-size:12px;color:var(--muted)}
-.pin:hover{outline:1px dashed rgba(255,255,255,.25)}
-.hint{font-size:12px;color:var(--muted)}
-.reactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.rxn{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:13px;user-select:none}
-.rxn.mine{outline:1px solid var(--accent)}
-@keyframes partyHue{from{filter:hue-rotate(0deg) saturate(1.25) contrast(1.05)}to{filter:hue-rotate(360deg) saturate(1.25) contrast(1.05)}}
-body.disco{animation:partyHue 1s linear infinite}
-@keyframes fxPulse{0%{filter:saturate(1)}50%{filter:saturate(1.6) brightness(1.15)}100%{filter:saturate(1)}}
-body.pulse{animation:fxPulse 1s ease-in-out infinite}
-@keyframes fxShake{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-2px)}50%{transform:translate(-2px,2px)}75%{transform:translate(2px,2px)}}
-body.shake{animation:fxShake .1s linear infinite}
-@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg)}}
-.confetti{position:fixed;width:6px;height:6px;top:-10px;will-change:transform;animation:confettiFall linear forwards;z-index:9998;border-radius:2px}
-.blocker{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
-.blocker-inner{max-width:520px;text-align:center;padding:24px;border-radius:16px;background:#0b1226;border:1px solid rgba(255,255,255,.12)}
-.blocker h2{margin:0 0 10px;font-size:20px}
-#fun{grid-column:1/-1;padding:12px;display:flex;flex-direction:column;gap:10px}
-#fun h3{margin:0;font-size:14px}
-#colorRow{display:flex;gap:8px;flex-wrap:wrap}
-.swatch{width:24px;height:24px;border-radius:999px;border:2px solid rgba(255,255,255,.25);cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
-.swatch.sel{outline:2px solid #fff}
-#gameSel,#difficultySel{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)}
-#game{min-height:260px;height:260px;background:#0b1226;border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;color:#cbd5e1}
-.ttt{display:grid;grid-template-columns:repeat(3,60px);gap:6px}
-.ttt button{width:60px;height:60px;font-size:22px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#111a2e;color:#fff;cursor:pointer}
-.mem{display:grid;grid-template-columns:repeat(4,44px);gap:6px}
-.mem button{width:44px;height:44px;font-size:18px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:#111a2e;color:#fff;cursor:pointer}
-#roomsCard{padding:10px}
-#roomsList{display:flex;flex-wrap:wrap;gap:8px}
-.roomPill{padding:6px 10px;border-radius:999px;background:#0b1226;border:1px solid rgba(255,255,255,.12);font-size:12px}
-
-/* === Festive holiday themes === */
-body[class*="holiday-"] {
-  transition: background 0.6s ease, filter 0.6s ease;
-}
-
-/* Christmas 🎄 */
-body.holiday-christmas {
-  --accent: #22c55e;
-  --ann: #f97373;
-  background:
-    radial-gradient(circle at top, rgba(248, 250, 252, 0.15) 0, transparent 55%),
-    linear-gradient(180deg, #022c22, #020617);
-  box-shadow: inset 0 0 80px rgba(148, 163, 184, 0.4);
-}
-body.holiday-christmas::before {
-  content: "🎄 Happy Holidays 🎄";
-  position: fixed;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  z-index: 9997;
-}
-
-/* Halloween 🎃 */
-body.holiday-halloween {
-  --accent: #f97316;
-  --ann: #f97316;
-  background:
-    radial-gradient(circle at top, rgba(248, 250, 252, 0.1) 0, transparent 50%),
-    linear-gradient(180deg, #020617, #111827, #4c1d95);
-  box-shadow: inset 0 0 80px rgba(24, 24, 27, 0.8);
-  filter: saturate(1.1);
-}
-body.holiday-halloween::before {
-  content: "🎃 Spooky Season 🎃";
-  position: fixed;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(251, 146, 60, 0.6);
-  z-index: 9997;
-}
-
-/* Thanksgiving 🦃 */
-body.holiday-thanksgiving {
-  --accent: #f59e0b;
-  --ann: #f97316;
-  background:
-    radial-gradient(circle at top, rgba(248, 250, 252, 0.1) 0, transparent 55%),
-    linear-gradient(180deg, #451a03, #7c2d12, #111827);
-  box-shadow: inset 0 0 80px rgba(120, 53, 15, 0.7);
-}
-body.holiday-thanksgiving::before {
-  content: "🦃 Happy Thanksgiving 🦃";
-  position: fixed;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(245, 158, 11, 0.7);
-  z-index: 9997;
-}
-
-/* Easter 🐣 */
-body.holiday-easter {
-  --accent: #a855f7;
-  --ann: #f97316;
-  background:
-    radial-gradient(circle at top, rgba(251, 113, 133, 0.15) 0, transparent 55%),
-    radial-gradient(circle at bottom, rgba(52, 211, 153, 0.2) 0, transparent 55%),
-    linear-gradient(180deg, #0f172a, #581c87);
-  filter: saturate(1.2);
-}
-body.holiday-easter::before {
-  content: "🐣 Happy Easter 🐣";
-  position: fixed;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(216, 180, 254, 0.7);
-  z-index: 9997;
-}
-
-/* Valentine's Day 💘 */
-body.holiday-valentines {
-  --accent: #ec4899;
-  --ann: #f97373;
-  background:
-    radial-gradient(circle at top, rgba(251, 113, 133, 0.2) 0, transparent 55%),
-    linear-gradient(180deg, #4a044e, #1f2937);
-  filter: saturate(1.25);
-}
-body.holiday-valentines::before {
-  content: "💘 Happy Valentine's Day 💘";
-  position: fixed;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(251, 113, 133, 0.8);
-  z-index: 9997;
-}
-</style>
 <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3ctext y='14' font-size='14'%3e%F0%9F%92%AC%3c/text%3e%3c/svg%3e" />
+<style>
+:root{
+  --bg0:#070a16;--bg1:#0b1025;--bg2:#0f172a;
+  --card:rgba(255,255,255,.05);--stroke:rgba(255,255,255,.10);--stroke2:rgba(255,255,255,.16);
+  --text:#e5e7eb;--muted:#9aa6bd;--accent:#22d3ee;--warn:#fbbf24;--danger:#fb7185;
+  --chip:rgba(255,255,255,.08);--shadow:0 18px 60px rgba(0,0,0,.35);
+  --r:16px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--text);
+  font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+  background:
+    radial-gradient(900px 600px at 10% -10%, rgba(34,211,238,.20), transparent 60%),
+    radial-gradient(900px 650px at 100% 0%, rgba(139,92,246,.20), transparent 55%),
+    radial-gradient(700px 500px at 30% 110%, rgba(52,211,153,.10), transparent 60%),
+    linear-gradient(180deg,var(--bg0),var(--bg2));
+  display:flex;
+}
+.container{max-width:1320px;margin:0 auto;flex:1;display:flex;flex-direction:column;gap:12px;padding:14px;min-height:0}
+.glass{background:var(--card);border:1px solid var(--stroke);border-radius:var(--r);box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1}
+.badge{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--chip);border:1px solid var(--stroke);color:#dbe6ff}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.20);border:1px solid var(--stroke);color:#dbe6ff}
+.small{font-size:12px;color:var(--muted)}
+.sep{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
+
+input,textarea,select{
+  background:rgba(10,16,38,.85);color:var(--text);
+  border:1px solid var(--stroke2);border-radius:14px;
+  padding:10px 12px;outline:none
+}
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(34,211,238,.55);
+  box-shadow:0 0 0 4px rgba(34,211,238,.12)
+}
+.btn{
+  cursor:pointer;border:0;border-radius:14px;padding:10px 12px;
+  background:linear-gradient(180deg, rgba(34,211,238,1), rgba(34,211,238,.75));
+  color:#001018;font-weight:900;letter-spacing:.2px;
+  box-shadow:0 10px 28px rgba(34,211,238,.18)
+}
+.btn:hover{filter:brightness(1.05)}
+.btn.warn{background:linear-gradient(180deg,#fde68a,#fbbf24);color:#241a02;box-shadow:0 10px 28px rgba(251,191,36,.14)}
+.btn.danger{background:linear-gradient(180deg,#fb7185,#f43f5e);color:#26060c;box-shadow:0 10px 28px rgba(244,63,94,.18)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+header{display:flex;gap:10px;align-items:center}
+header h1{margin:0;font-size:18px;letter-spacing:.2px}
+#status{font-size:12px;color:var(--muted)}
+
+#roomBar{padding:10px 12px;flex-wrap:wrap}
+#roomBar input{flex:1;min-width:140px}
+#roomsCard{padding:10px 12px}
+#roomsList{display:flex;flex-wrap:wrap;gap:8px}
+.roomPill{
+  padding:7px 11px;border-radius:999px;background:rgba(10,16,38,.75);
+  border:1px solid var(--stroke);font-size:12px;cursor:pointer
+}
+.roomPill:hover{border-color:rgba(34,211,238,.45);transform:translateY(-1px)}
+
+.layout{
+  display:grid;
+  grid-template-columns:280px 1fr 360px;
+  gap:12px;
+  flex:1;
+  min-height:0;
+}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}}
+.panel{min-height:0}
+
+#rules{padding:12px;min-height:0}
+#rules h3{margin:0 0 8px;font-size:13px;letter-spacing:.2px}
+#rules ol{margin:0;padding-left:18px;color:#cbd5e1;line-height:1.35}
+
+#chat{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  overflow:hidden;
+}
+#announce{
+  display:none;margin:12px 12px 0;padding:12px;border-radius:14px;
+  border:1px solid rgba(251,191,36,.55);
+  background:linear-gradient(90deg, rgba(251,191,36,.16), rgba(251,191,36,.06));
+}
+#announce .label{display:inline-block;font-weight:1000;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--warn);color:#1a1205;border-radius:999px;padding:3px 8px;margin-bottom:6px}
+#messages{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.sys{text-align:center;font-size:12px;color:var(--muted);margin:8px 0}
+
+.msg{
+  padding:10px 12px;border-radius:16px;
+  background:linear-gradient(180deg, rgba(10,16,38,.85), rgba(10,16,38,.65));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 10px 26px rgba(0,0,0,.20);
+  display:flex;flex-direction:column;gap:6px
+}
+.msg:hover{border-color:rgba(255,255,255,.18)}
+.msg.me{border-color:rgba(34,211,238,.22)}
+.meta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.meta strong{color:#dbe6ff}
+.msg.me .meta strong{color:#b9f6e0}
+.text{white-space:pre-wrap;word-wrap:anywhere;line-height:1.45}
+.reactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.rxn{
+  user-select:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:2px 9px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  font-size:13px
+}
+.rxn.mine{outline:1px solid var(--accent)}
+
+#composer{
+  position:sticky;bottom:0;z-index:3;
+  padding:10px 12px;
+  background:linear-gradient(180deg, rgba(7,10,22,.00), rgba(7,10,22,.85));
+  border-top:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(10px);
+  display:flex;gap:8px;align-items:flex-end
+}
+#name{width:170px}
+#input{flex:1;min-height:44px;max-height:160px;resize:vertical}
+
+.stack{display:flex;flex-direction:column;gap:10px;min-height:0}
+
+@media (max-width:1100px){
+  #chat{order:0;min-height:60vh}
+  #rules{order:1}
+  .rightCol{order:2}
+}
+@media (max-width:520px){
+  #composer{flex-direction:column;align-items:stretch}
+  #name{width:100%}
+}
+
+.blocker{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:9999}
+.blocker-inner{max-width:520px;text-align:center;padding:24px;border-radius:18px;background:rgba(10,16,38,.92);border:1px solid rgba(255,255,255,.14)}
+
+/* Color swatches */
+#colorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.swatch{width:22px;height:22px;border-radius:999px;border:2px solid rgba(255,255,255,.22);cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.swatch.sel{outline:2px solid #fff}
+
+/* Holiday themes (simple) */
+body[class*="holiday-"]{transition:background .6s ease, filter .6s ease}
+body.holiday-christmas{--accent:#22c55e;--warn:#fb7185;background:linear-gradient(180deg,#022c22,#020617)}
+body.holiday-halloween{--accent:#f97316;--warn:#f97316;background:linear-gradient(180deg,#020617,#111827,#4c1d95);filter:saturate(1.1)}
+body.holiday-thanksgiving{--accent:#f59e0b;--warn:#fb923c;background:linear-gradient(180deg,#451a03,#7c2d12,#111827)}
+body.holiday-easter{--accent:#a855f7;--warn:#fb7185;background:linear-gradient(180deg,#0f172a,#581c87);filter:saturate(1.2)}
+body.holiday-valentines{--accent:#ec4899;--warn:#fb7185;background:linear-gradient(180deg,#4a044e,#1f2937);filter:saturate(1.2)}
+</style>
 </head>
+
 <body>
-<div id="blocker" class="blocker" style="display:none"><div class="blocker-inner"><h2>You've been kicked</h2><p class="small">An admin removed you from the room. Refresh the page to rejoin.</p></div></div>
+<div id="blocker" class="blocker">
+  <div class="blocker-inner">
+    <h2 style="margin:0 0 10px">You've been kicked</h2>
+    <p class="small" style="margin:0">An admin removed you from the room. Refresh the page to rejoin.</p>
+  </div>
+</div>
+
 <div class="container">
-<header>
-<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<h1>Global Chat — Supabase</h1>
-<span class="badge" id="online">…</span>
-<span class="badge" id="globalOnline">…</span>
-<div class="grow"></div>
-<span class="meta" id="status">Connecting…</span>
-</header>
-<div id="room" class="card"><div class="row" style="width:100%"><label class="meta" for="roomInput">Room:</label><input id="roomInput" placeholder="global" /><button id="switchRoom">Join</button></div></div>
-<div id="roomsCard" class="card"><div class="row" style="justify-content:space-between;align-items:center"><div class="meta">Open rooms</div><div class="meta" id="roomsUpdated"></div></div><div id="roomsList"></div></div>
-<div class="layout">
-<aside id="rules" class="card"><h3>Rules</h3><ol>
-<li>No offensive and or unsafe topics/names</li>
-<li>Slurs and or offensive nicknames will be filtered and removed.</li>
-<li>Abusing admin is a access removeable offense.</li>
-<li>Drama has to end QUICKLY OR. Go into a private room to prevent punishment.</li>
-<li>All forms of venting must be done in rooms Vent 1-3 OR have to be brief spanning below 10 minutes. Talking about a bad day isnt venting.</li>
-</ol></aside>
-<div id="chat" class="card">
-<div id="announce"><div class="label">📢 Announcement</div><div id="announceText" class="txt"></div><div class="who">— <span id="announceBy"></span> <span id="announceAt"></span></div></div>
-<div id="messages"></div>
-<div id="composer"><input id="name" placeholder="Nickname" maxlength="20" /><textarea id="input" placeholder="Type a message… (Shift+Enter = newline)" maxlength="300"></textarea><button id="send">Send</button></div>
-</div>
-<aside id="admin" class="card">
-<div class="row" style="justify-content:space-between;align-items:center"><h3>Admin</h3><span id="pausePill" class="pill">Status: <strong id="pauseState">active</strong></span></div>
-<div id="adminLocked"><p class="small">Enter passcode to unlock controls.</p><input id="pass" type="password" placeholder="Passcode" /><div class="btn-row"><button id="unlock" class="btn">Unlock</button></div></div>
-<div id="adminControls" style="display:none">
-<p class="small">Controls are scoped to the current room (<span id="roomNameLabel">global</span>).</p>
-<div class="btn-row"><button id="pauseBtn" class="btn warn">Pause</button><button id="unpauseBtn" class="btn">Unpause</button><button id="clearBtn" class="btn danger">Clear</button><button id="discoBtn" class="btn">Disco 10s</button><button id="fxPulse" class="btn">Pulse 8s</button><button id="fxShake" class="btn">Shake 5s</button><button id="fxConfetti" class="btn">Confetti</button></div>
-<hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="targetNick" type="text" placeholder="Nickname (case-insensitive)" /><div class="btn-row"><button id="kickBtn" class="btn danger">Kick</button><button id="muteBtn" class="btn warn">Mute</button><button id="unmuteBtn" class="btn">Unmute</button></div><div id="muteList" class="small"></div></div>
-<hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="announceInput" type="text" placeholder="Announcement text" /><div class="btn-row"><button id="setAnnBtn" class="btn">Set announcement</button><button id="clrAnnBtn" class="btn danger">Clear announcement</button></div></div>
-<hr style="opacity:.15"><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="banTerm" type="text" placeholder="Add banned term (admin)" /><div class="btn-row"><button id="addBan" class="btn warn">Add term</button><button id="delBan" class="btn">Remove term</button></div><div id="banList" class="small"></div></div>
+  <header class="glass" style="padding:12px">
+    <div class="row" style="width:100%">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Global Chat</h1>
+      <span class="badge" id="online">…</span>
+      <span class="badge" id="globalOnline">…</span>
+      <div class="grow"></div>
+      <span id="status">Connecting…</span>
+    </div>
+  </header>
 
-<hr style="opacity:.15">
-<div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
-  <div class="small">
-    Festive mode
-    <span class="pill" style="margin-left:6px">Active: <strong id="holidayActive">off</strong></span>
+  <div id="roomBar" class="glass row">
+    <span class="small">Room</span>
+    <input id="roomInput" placeholder="global" />
+    <button id="switchRoom" class="btn">Join</button>
+
+    <label class="pill row" style="gap:8px;margin-left:auto;cursor:pointer">
+      <input id="notifToggle" type="checkbox" style="width:16px;height:16px;accent-color:var(--accent)" />
+      <span class="small" style="color:#dbe6ff">Notify this room</span>
+    </label>
+    <label class="pill row" style="gap:8px;cursor:pointer">
+      <input id="joinToggle" type="checkbox" style="width:16px;height:16px;accent-color:var(--accent)" />
+      <span class="small" style="color:#dbe6ff">Notify joins</span>
+    </label>
   </div>
-  <select id="holidaySelect" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0b1226;color:var(--text)">
-    <!-- options are populated by JS -->
-  </select>
-  <div class="btn-row">
-    <button id="holidayApply" class="btn">Apply festive theme</button>
-    <button id="holidayClear" class="btn warn">Clear festive theme</button>
+
+  <div id="roomsCard" class="glass">
+    <div class="row" style="padding:10px 12px">
+      <div class="small">Open rooms</div>
+      <div class="grow"></div>
+      <div class="small" id="roomsUpdated"></div>
+    </div>
+    <div id="roomsList" style="padding:0 12px 12px"></div>
+  </div>
+
+  <div class="layout">
+    <aside class="glass panel" id="rules">
+      <h3>Rules</h3>
+      <ol>
+        <li>No offensive and/or unsafe topics/names</li>
+        <li>Slurs/offensive nicknames will be filtered/removed.</li>
+        <li>Abusing admin is a removable offense.</li>
+        <li>Drama ends quickly or take it private.</li>
+        <li>Venting only in Vent rooms or keep it brief.</li>
+      </ol>
+    </aside>
+
+    <section class="glass panel" id="chat">
+      <div id="announce">
+        <div class="label">📢 Announcement</div>
+        <div id="announceText"></div>
+        <div class="small" style="margin-top:6px">— <span id="announceBy"></span> <span id="announceAt"></span></div>
+      </div>
+      <div id="messages"></div>
+      <div id="composer">
+        <input id="name" placeholder="Nickname" maxlength="20" />
+        <textarea id="input" placeholder="Type a message… (Shift+Enter = newline)" maxlength="300"></textarea>
+        <button id="send" class="btn">Send</button>
+      </div>
+    </section>
+
+    <aside class="panel stack rightCol">
+      <div class="glass" style="padding:12px">
+        <div class="row" style="justify-content:space-between">
+          <strong style="font-size:13px">Style</strong>
+          <span class="pill">Text color</span>
+        </div>
+        <div id="colorRow" style="margin-top:10px"></div>
+        <div class="small" style="margin-top:8px">Pick a color for your messages.</div>
+      </div>
+
+      <div class="glass" style="padding:12px">
+        <div class="row" style="justify-content:space-between">
+          <strong style="font-size:13px">Admin</strong>
+          <span class="pill">Status: <strong id="pauseState">active</strong></span>
+        </div>
+
+        <div id="adminLocked" class="stack" style="margin-top:10px">
+          <div class="small">Enter passcode to unlock controls.</div>
+          <input id="pass" type="password" placeholder="Passcode" />
+          <button id="unlock" class="btn">Unlock</button>
+        </div>
+
+        <div id="adminControls" class="stack" style="display:none;margin-top:10px">
+          <div class="small">Scoped to <strong id="roomNameLabel">global</strong></div>
+
+          <div class="row" style="flex-wrap:wrap">
+            <button id="pauseBtn" class="btn warn">Pause</button>
+            <button id="unpauseBtn" class="btn">Unpause</button>
+            <button id="clearBtn" class="btn danger">Clear</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <input id="targetNick" type="text" placeholder="Nickname (case-insensitive)" />
+          <div class="row" style="flex-wrap:wrap">
+            <button id="kickBtn" class="btn danger">Kick</button>
+            <button id="muteBtn" class="btn warn">Mute</button>
+            <button id="unmuteBtn" class="btn">Unmute</button>
+          </div>
+          <div id="muteList" class="small"></div>
+
+          <div class="sep"></div>
+
+          <input id="announceInput" type="text" placeholder="Announcement text" />
+          <div class="row" style="flex-wrap:wrap">
+            <button id="setAnnBtn" class="btn">Set announcement</button>
+            <button id="clrAnnBtn" class="btn danger">Clear</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <input id="banTerm" type="text" placeholder="Add banned term" />
+          <div class="row" style="flex-wrap:wrap">
+            <button id="addBan" class="btn warn">Add term</button>
+            <button id="delBan" class="btn">Remove term</button>
+          </div>
+          <div id="banList" class="small"></div>
+
+          <div class="sep"></div>
+
+          <div class="stack">
+            <div class="row">
+              <div class="small">Festive theme</div>
+              <span class="pill">Active: <strong id="holidayActive">off</strong></span>
+            </div>
+            <select id="holidaySelect"></select>
+            <div class="row" style="flex-wrap:wrap">
+              <button id="holidayApply" class="btn">Apply</button>
+              <button id="holidayClear" class="btn warn">Clear</button>
+            </div>
+          </div>
+
+          <div id="ownerOnly" class="stack" style="display:none;margin-top:10px">
+            <div class="sep"></div>
+            <div class="small"><strong>Owner tools</strong></div>
+            <input id="banNick" type="text" placeholder="Ban by nickname (online preferred)" />
+            <div class="row" style="flex-wrap:wrap">
+              <button id="banBtn" class="btn danger">Ban</button>
+              <button id="unbanBtn" class="btn">Unban</button>
+            </div>
+            <div id="bannedList" class="small"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass" style="padding:12px;min-height:0">
+        <div class="row" style="justify-content:space-between">
+          <strong style="font-size:13px">Pinned</strong><span class="small">max 5</span>
+        </div>
+        <div class="small" style="margin:6px 0 10px">Double-click a message to pin. Double-click a pin to unpin.</div>
+        <div id="pinList" class="stack" style="max-height:260px;overflow:auto;min-height:0"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="small" style="text-align:center;padding:6px 0 0">
+    Realtime chat powered by Supabase. Keep it friendly ✨
   </div>
 </div>
 
-<hr style="opacity:.15"><div id="ownerOnly" style="display:none" class="row"><div style="width:100%"><div class="small">Owner tools</div><div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><input id="banNick" type="text" placeholder="Ban by nickname (current online)" /><div class="btn-row"><button id="banBtn" class="btn danger">Ban</button><button id="unbanBtn" class="btn">Unban</button></div><div id="bannedList" class="small"></div></div></div></div>
-</div>
-</aside>
-<aside id="pins" class="card"><h3>Pinned (max 5)</h3><div class="hint">Double-click any message to pin. Double-click a pin to unpin.</div><div id="pinList"></div></aside>
-<aside id="fun" class="card"><h3>Fun & Style</h3><div class="row" id="colorRow"></div><div class="row controls"><select id="gameSel"><option value="rps">Rock • Paper • Scissors</option><option value="ttt">Tic-Tac-Toe</option><option value="guess">Number Guess</option><option value="mem">Memory Match</option><option value="react">Reaction Test</option><option value="snake">Snake</option></select><select id="difficultySel" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div><div id="game">Pick a game</div></aside>
-</div>
-<footer>Free realtime chat powered by Supabase (Postgres + Realtime). Keep it friendly ✨</footer>
-</div>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+/* ===== Config ===== */
 const SUPABASE_URL='https://prpjfrqfbbsxqhspqheo.supabase.co'
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBycGpmcnFmYmJzeHFoc3BxaGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNjgwMDksImV4cCI6MjA3Mzc0NDAwOX0.XEUz5g-tzW4UAsKLk62FJratwaLYAL-1noBTu0EwTkY'
-const PERSIST=true
-const MAX_MSGS=15
+
+const PERSIST=true, MAX_MSGS=25
 const ADMIN_PASS='DivinePermissions'
 const OWNER_PASS='ServerHostPanel'
 const REACTIONS=['👍','❤️','😂','😮','😢','😡']
-const COLORS = [
-  '#ffffff', // White
-  '#cbd5e1', // Light Gray
-  '#facc15', // Yellow
-  '#fb923c', // Orange
-  '#22d3ee', // Cyan
-  '#38bdf8', // Sky
-  '#3b82f6', // Blue
-  '#8b5cf6', // Violet
-  '#a78bfa', // Light Violet
-  '#ec4899', // Pink
-  '#f472b6', // Light Pink
-  '#f43f5e', // Rose
-  '#10b981', // Emerald
-  '#a3e635', // Lime
-  '#f59e0b', // Amber
-];
+const COLORS=[
+  '#ffffff','#cbd5e1','#facc15','#fb923c','#22d3ee','#38bdf8','#3b82f6','#8b5cf6',
+  '#a78bfa','#ec4899','#f472b6','#f43f5e','#10b981','#a3e635','#f59e0b'
+]
+const HOLIDAYS={
+  none:{label:'Off',emoji:'⏹️'},
+  christmas:{label:'Christmas',emoji:'🎄'},
+  halloween:{label:'Halloween',emoji:'🎃'},
+  thanksgiving:{label:'Thanksgiving',emoji:'🦃'},
+  easter:{label:'Easter',emoji:'🐣'},
+  valentines:{label:"Valentine's Day",emoji:'💘'}
+}
 
-const HOLIDAYS = {
-  none:      { label: 'Off',            emoji: '⏹️' },
-  christmas: { label: 'Christmas',      emoji: '🎄' },
-  halloween: { label: 'Halloween',      emoji: '🎃' },
-  thanksgiving: { label: 'Thanksgiving', emoji: '🦃' },
-  easter:    { label: 'Easter',         emoji: '🐣' },
-  valentines:{ label: "Valentine's Day", emoji: '💘' }
-};
+/* ===== Helpers ===== */
+const $=(q,r=document)=>r.querySelector(q)
+const $$=(q,r=document)=>[...r.querySelectorAll(q)]
+const norm=s=>(s||'').trim().toLowerCase()
+const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const nowIso=()=>new Date().toISOString()
+const msgKey=m=>`${m.user_id}|${m.created_at}|${m.text}`
+
+/* ===== Elements ===== */
+const E={
+  status:$('#status'), online:$('#online'), globalOnline:$('#globalOnline'),
+  roomInput:$('#roomInput'), switchRoom:$('#switchRoom'), roomNameLabel:$('#roomNameLabel'),
+  roomsList:$('#roomsList'), roomsUpdated:$('#roomsUpdated'),
+  messages:$('#messages'), name:$('#name'), input:$('#input'), send:$('#send'),
+  blocker:$('#blocker'),
+  announce:$('#announce'), announceText:$('#announceText'), announceBy:$('#announceBy'), announceAt:$('#announceAt'),
+  adminLocked:$('#adminLocked'), adminControls:$('#adminControls'), pass:$('#pass'), unlock:$('#unlock'),
+  pauseState:$('#pauseState'),
+  pauseBtn:$('#pauseBtn'), unpauseBtn:$('#unpauseBtn'), clearBtn:$('#clearBtn'),
+  targetNick:$('#targetNick'), kickBtn:$('#kickBtn'), muteBtn:$('#muteBtn'), unmuteBtn:$('#unmuteBtn'),
+  muteList:$('#muteList'),
+  announceInput:$('#announceInput'), setAnnBtn:$('#setAnnBtn'), clrAnnBtn:$('#clrAnnBtn'),
+  banTerm:$('#banTerm'), addBan:$('#addBan'), delBan:$('#delBan'), banList:$('#banList'),
+  ownerOnly:$('#ownerOnly'), banNick:$('#banNick'), banBtn:$('#banBtn'), unbanBtn:$('#unbanBtn'), bannedList:$('#bannedList'),
+  holidaySelect:$('#holidaySelect'), holidayApply:$('#holidayApply'), holidayClear:$('#holidayClear'), holidayActive:$('#holidayActive'),
+  pinList:$('#pinList'),
+  notifToggle:$('#notifToggle'), joinToggle:$('#joinToggle'),
+  colorRow:$('#colorRow')
+}
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
-const els={status:document.getElementById('status'),input:document.getElementById('input'),send:document.getElementById('send'),messages:document.getElementById('messages'),name:document.getElementById('name'),online:document.getElementById('online'),globalOnline:document.getElementById('globalOnline'),roomsList:document.getElementById('roomsList'),roomsUpdated:document.getElementById('roomsUpdated'),roomInput:document.getElementById('roomInput'),switchRoom:document.getElementById('switchRoom'),adminLocked:document.getElementById('adminLocked'),adminControls:document.getElementById('adminControls'),pass:document.getElementById('pass'),unlock:document.getElementById('unlock'),pauseBtn:document.getElementById('pauseBtn'),unpauseBtn:document.getElementById('unpauseBtn'),clearBtn:document.getElementById('clearBtn'),discoBtn:document.getElementById('discoBtn'),pauseState:document.getElementById('pauseState'),roomNameLabel:document.getElementById('roomNameLabel'),pausePill:document.getElementById('pausePill'),targetNick:document.getElementById('targetNick'),kickBtn:document.getElementById('kickBtn'),muteBtn:document.getElementById('muteBtn'),unmuteBtn:document.getElementById('unmuteBtn'),blocker:document.getElementById('blocker'),announce:document.getElementById('announce'),announceText:document.getElementById('announceText'),announceBy:document.getElementById('announceBy'),announceAt:document.getElementById('announceAt'),announceInput:document.getElementById('announceInput'),setAnnBtn:document.getElementById('setAnnBtn'),clrAnnBtn:document.getElementById('clrAnnBtn'),pinList:document.getElementById('pinList'),banTerm:document.getElementById('banTerm'),addBan:document.getElementById('addBan'),delBan:document.getElementById('delBan'),banList:document.getElementById('banList'),ownerOnly:document.getElementById('ownerOnly'),banNick:document.getElementById('banNick'),banBtn:document.getElementById('banBtn'),unbanBtn:document.getElementById('unbanBtn'),bannedList:document.getElementById('bannedList'),colorRow:document.getElementById('colorRow'),gameSel:document.getElementById('gameSel'),diffSel:document.getElementById('difficultySel'),game:document.getElementById('game'),fxPulse:document.getElementById('fxPulse'),fxShake:document.getElementById('fxShake'),fxConfetti:document.getElementById('fxConfetti')}
-let state={
+
+/* ===== State ===== */
+const S={
   room:localStorage.getItem('room')||'global',
   name:localStorage.getItem('nickname')||'',
   userId:localStorage.getItem('uid')||crypto.randomUUID(),
-  role:'guest',
-  roomChannel:null,
-  admin:false,
-  paused:false,
-  pausedBy:null,
-  pausedName:null,
-  discoTimer:null,
-  mutedNicks:new Set(),
-  kicked:false,
-  pins:[],
-  reactions:new Map(),
-  bannedTerms:new Set(),
-  banned:false,
+  role:'guest', admin:false,
+  roomChannel:null, presenceTimer:null, lastNotifyAt:0,
+  paused:false, pausedBy:null, pausedName:null,
+  muted:new Set(), bannedTerms:new Set(),
+  kicked:false, banned:false,
+  pins:[], reactions:new Map(),
+  holiday:localStorage.getItem('holiday')||'none',
   color:localStorage.getItem('color')||COLORS[0],
-  presenceTimer:null,
-  currentGame:'rps',
-  holiday:'none'
+  notifyRooms:new Set(JSON.parse(localStorage.getItem('notifyRooms')||'[]')),
+  notifyJoinsRooms:new Set(JSON.parse(localStorage.getItem('notifyJoinsRooms')||'[]')),
+  lastPresenceCount:0
 }
 const rendered=new Set()
-const msgKey=m=>`${m.user_id}|${m.created_at}|${m.text}`
-const norm=s=>(s||'').trim().toLowerCase()
-function setStatus(t){els.status.textContent=t}
-function sys(text){const d=document.createElement('div');d.className='sys';d.textContent=text;els.messages.appendChild(d);els.messages.scrollTop=els.messages.scrollHeight}
-function collapseRepeats(t){let o='',p='',c=0;for(const ch of t){if(ch===p){c++;if(c<=2)o+=ch}else{p=ch;c=1;o+=ch}}return o}
-function normalizeForModeration(s){if(!s)return'';let t=s.toLowerCase();t=t.replace(/[@]/g,'a').replace(/[0]/g,'o').replace(/[1l!]/g,'i').replace(/[3]/g,'e').replace(/[4]/g,'a').replace(/[5$]/g,'s').replace(/[7]/g,'t');t=t.replace(/[^a-z0-9]+/g,'');t=collapseRepeats(t);return t}
-function violatesModeration(text){const n=normalizeForModeration(text);for(const term of state.bannedTerms){if(n.includes(term))return true}return false}
-function maskModeration(text){return violatesModeration(text)?'🚫 [filtered]':text}
-function escapeHtml(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]))}
-function renderMsg(m){const wrap=document.createElement('div');const mine=m.user_id===state.userId;const id=msgKey(m);wrap.className='msg'+(mine?' me':'');wrap.dataset.id=id;const meta=document.createElement('div');meta.className='meta';const when=new Date(m.created_at||Date.now());meta.innerHTML=`<strong>${escapeHtml(m.name||'anon')}</strong> · ${when.toLocaleString()}${mine?' · you':''}`;const text=document.createElement('div');text.className='text';text.style.color=m.color||'';text.textContent=maskModeration(m.text);const rxn=document.createElement('div');rxn.className='reactions';REACTIONS.forEach(e=>{const b=document.createElement('span');b.className='rxn';b.dataset.emoji=e;b.textContent=e;b.addEventListener('click',()=>toggleReaction(id,e));rxn.appendChild(b)});wrap.appendChild(meta);wrap.appendChild(text);wrap.appendChild(rxn);wrap.title='Double-click to pin';wrap.addEventListener('dblclick',()=>pinMessage(m));els.messages.appendChild(wrap);renderReactions(id)}
-function renderReactions(id){const wrap=els.messages.querySelector(`.msg[data-id="${CSS.escape(id)}"]`);if(!wrap)return;const bar=wrap.querySelector('.reactions');const map=state.reactions.get(id)||{};[...bar.children].forEach(node=>{const emo=node.dataset.emoji;const set=map[emo]||new Set();node.textContent=`${emo} ${set.size||''}`.trim();if(set.has(state.userId))node.classList.add('mine');else node.classList.remove('mine')})}
-async function toggleReaction(messageId,emoji){const map=state.reactions.get(messageId)||{};map[emoji]=map[emoji]||new Set();const has=map[emoji].has(state.userId);if(has){map[emoji].delete(state.userId);state.reactions.set(messageId,map);renderReactions(messageId);await supabase.from('message_reactions').delete().match({room:state.room,message_id:messageId,emoji,user_id:state.userId});state.roomChannel.send({type:'broadcast',event:'rxn',payload:{op:'del',message_id:messageId,emoji,user_id:state.userId}})}else{map[emoji].add(state.userId);state.reactions.set(messageId,map);renderReactions(messageId);await supabase.from('message_reactions').insert({room:state.room,message_id:messageId,emoji,user_id:state.userId});state.roomChannel.send({type:'broadcast',event:'rxn',payload:{op:'add',message_id:messageId,emoji,user_id:state.userId}})}}
-function trimUI(){const nodes=[...els.messages.querySelectorAll('.msg')];const extra=nodes.length-MAX_MSGS;for(let i=0;i<extra;i++)nodes[i].remove();els.messages.scrollTop=els.messages.scrollHeight}
-function clearUI(){els.messages.innerHTML='';rendered.clear()}
-function addIfNew(m){const k=msgKey(m);if(rendered.has(k))return;rendered.add(k);renderMsg(m);trimUI()}
-function setRole(role){state.role=role;state.admin=role==='admin'||role==='owner';els.adminLocked.style.display=state.admin?'none':'';els.adminControls.style.display=state.admin?'block':'none';els.ownerOnly.style.display=role==='owner'?'block':'none'}
-function setPaused(p,byId=null,byName=null){state.paused=!!p;state.pausedBy=byId;state.pausedName=byName;const who=state.paused?(state.pausedName?`paused by ${escapeHtml(state.pausedName)}`:'paused'):'active';els.pauseState.textContent=who;els.pausePill.style.background=state.paused?'#fde68a':'rgba(255,255,255,.08)';updateComposerDisabled()}
-function updateComposerDisabled(){const blocked=(state.paused&&state.userId!==state.pausedBy)||state.kicked||state.mutedNicks.has(norm(state.name))||state.banned;els.input.disabled=blocked;els.send.disabled=blocked;if(state.kicked){els.input.placeholder='You were kicked. Refresh to rejoin.'}else if(state.banned){els.input.placeholder='You are banned.'}else if(state.mutedNicks.has(norm(state.name))){els.input.placeholder='You are muted by admin.'}else if(state.paused&&state.userId!==state.pausedBy){els.input.placeholder='Chat is paused by admin.'}else{els.input.placeholder='Type a message… (Shift+Enter = newline)'}}
-function updateMuteList(){const arr=Array.from(state.mutedNicks.values());document.getElementById('muteList').textContent=arr.length?`Muted: ${arr.join(', ')}`:'Muted: (none)';updateComposerDisabled()}
-function updateBanList(){const arr=Array.from(state.bannedTerms.values());els.banList.textContent=arr.length?`Banned terms: ${arr.join(', ')}`:'Banned terms: (none)'}
-function startDisco(ms=10000){clearTimeout(state.discoTimer);document.body.classList.add('disco');sys('✨ Disco!');state.discoTimer=setTimeout(()=>{document.body.classList.remove('disco')},ms)}
-function startPulse(ms=8000){document.body.classList.add('pulse');setTimeout(()=>document.body.classList.remove('pulse'),ms)}
-function startShake(ms=5000){document.body.classList.add('shake');setTimeout(()=>document.body.classList.remove('shake'),ms)}
-function startConfetti(ms=5000){for(let i=0;i<150;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=`hsl(${Math.random()*360},85%,60%)`;d.style.animationDuration=3+Math.random()*2+'s';d.style.animationDelay=Math.random()*1+'s';d.style.transform=`translateY(-10px) rotate(${Math.random()*360}deg)`;document.body.appendChild(d);setTimeout(()=>d.remove(),6000)}setTimeout(()=>{},ms)}
-function showBlocker(){document.getElementById('blocker').style.display='';state.kicked=true;updateComposerDisabled()}
-function renderAnnouncement(text,by,at){if(text){els.announce.style.display='block';els.announceText.textContent=text;els.announceBy.textContent=by?by:'admin';els.announceAt.textContent=at?new Date(at).toLocaleString():''}else{els.announce.style.display='none';els.announceText.textContent='';els.announceBy.textContent='';els.announceAt.textContent=''}}
-const pinsKey=()=>`pins:${state.room}`
-function loadPins(){try{state.pins=JSON.parse(localStorage.getItem(pinsKey())||'[]')}catch{state.pins=[]}renderPins()}
-function savePins(){localStorage.setItem(pinsKey(),JSON.stringify(state.pins))}
-function renderPins(){els.pinList.innerHTML='';if(!state.pins.length){const p=document.createElement('div');p.className='hint';p.textContent='No pins yet';els.pinList.appendChild(p);return}state.pins.forEach(addPinDOM)}
-function addPinDOM(p){const d=document.createElement('div');d.className='pin';d.dataset.id=p.id;d.innerHTML=`<div class="meta"><strong>${escapeHtml(p.name)}</strong> · ${new Date(p.created_at).toLocaleString()}</div><div class="text">${escapeHtml(p.text)}</div>`;d.title='Double-click to unpin';d.addEventListener('dblclick',()=>unpin(p.id));els.pinList.appendChild(d)}
-function pinMessage(m){const id=msgKey(m);if(state.pins.find(x=>x.id===id))return;if(state.pins.length>=5){alert('Pin board is full (max 5). Double-click a pin to remove.');return}const item={id,name:m.name||'anon',text:maskModeration(m.text),created_at:m.created_at||new Date().toISOString()};state.pins.push(item);savePins();renderPins()}
-function unpin(id){state.pins=state.pins.filter(p=>p.id!==id);savePins();renderPins()}
-async function loadRoomState(){const{data,error}=await supabase.from('room_state').select('paused, paused_by, paused_name, muted_nicks, announcement_text, announcement_by, announcement_at').eq('room',state.room).maybeSingle();if(!error&&data){setPaused(!!data.paused,data.paused_by||null,data.paused_name||null);state.mutedNicks=new Set((data.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(data.announcement_text||'',data.announcement_by||'',data.announcement_at||'')}else{setPaused(false,null,null);state.mutedNicks=new Set();updateMuteList();renderAnnouncement('','','')}}
-async function loadBannedTerms(){const{data,error}=await supabase.from('banned_terms').select('term');if(!error&&data){state.bannedTerms=new Set(data.map(r=>norm(r.term)))}else{state.bannedTerms=new Set()}updateBanList()}
-async function loadReactionsFor(ids){if(!ids.length)return;const{data,error}=await supabase.from('message_reactions').select('message_id, emoji, user_id').eq('room',state.room).in('message_id',ids);if(error)return;data.forEach(r=>{const map=state.reactions.get(r.message_id)||{};map[r.emoji]=map[r.emoji]||new Set();map[r.emoji].add(r.user_id);state.reactions.set(r.message_id,map)});ids.forEach(renderReactions)}
-async function checkBan(){const{data}=await supabase.from('banned_users').select('user_id').eq('user_id',state.userId).maybeSingle();state.banned=!!data;updateComposerDisabled()}
-async function heartbeat(){const now=new Date().toISOString();await supabase.from('presence').upsert({user_id:state.userId,name:state.name||'anon',room:state.room,updated_at:now});}
-async function refreshRooms(){const cutoff=new Date(Date.now()-90*1000).toISOString();const{data:all}=await supabase.from('presence').select('user_id').gt('updated_at',cutoff);els.globalOnline.textContent=`${new Set((all||[]).map(r=>r.user_id)).size} online (global)`;const{data:rooms}=await supabase.from('presence').select('room,user_id').gt('updated_at',cutoff);const counts=new Map();(rooms||[]).forEach(r=>{counts.set(r.room,(counts.get(r.room)||new Set()).add(r.user_id))});els.roomsList.innerHTML='';[...counts.entries()].sort((a,b)=>b[1].size-a[1].size).forEach(([room,set])=>{const d=document.createElement('span');d.className='roomPill';d.textContent=`#${room} · ${set.size}`;d.addEventListener('click',()=>joinRoom(room));els.roomsList.appendChild(d)});els.roomsUpdated.textContent=new Date().toLocaleTimeString()}
-async function loadRecent(){try{if(!PERSIST)return;clearUI();const{data,error}=await supabase.from('messages').select('*').eq('room',state.room).order('created_at',{ascending:false}).limit(MAX_MSGS);if(error){console.error(error);sys('Failed to load history');return}const list=(data||[]).reverse();list.forEach(addIfNew);const ids=list.map(m=>msgKey(m));await loadReactionsFor(ids)}catch(e){console.error('loadRecent failed',e)}}
-async function send(){try{const raw=els.input.value;const text=(raw||'').trim();if(!text)return;if(text.length>300){alert('Max 300 characters');return}if(state.kicked){alert('You were kicked. Refresh to rejoin.');return}if(state.banned){alert('You are banned.');return}if(state.mutedNicks.has(norm(state.name))&&!state.admin){alert('You are muted by admin.');return}if(state.paused&&state.userId!==state.pausedBy){alert(`Chat is paused by ${state.pausedName||'admin'}.`);return}if(violatesModeration(text)){alert('Message blocked by moderation.');return}const name=(els.name.value||'anon').slice(0,20);els.name.value=name;state.name=name;localStorage.setItem('nickname',name);localStorage.setItem('uid',state.userId);const msg={room:state.room,user_id:state.userId,name,text,created_at:new Date().toISOString(),color:state.color};els.input.value='';state.roomChannel?.send({type:'broadcast',event:'msg',payload:msg});addIfNew(msg);if(PERSIST){const{error}=await supabase.from('messages').insert(msg);if(error)console.error(error)}}catch(e){console.error('send failed',e)}}
-function roleFromPass(p){const v=(p||'').trim();if(!v)return null;if(v===OWNER_PASS||v.toLowerCase()===OWNER_PASS.toLowerCase())return'owner';if(v===ADMIN_PASS||v.toLowerCase()===ADMIN_PASS.toLowerCase())return'admin';return null}
-document.getElementById('unlock').addEventListener('click',()=>{const role=roleFromPass(els.pass.value);if(role){setRole(role);els.pass.value=''}else alert('Wrong passcode')})
-els.pass.addEventListener('keydown',e=>{if(e.key==='Enter'){const role=roleFromPass(els.pass.value);if(role){setRole(role);els.pass.value=''}else alert('Wrong passcode')}})
-document.getElementById('pauseBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,paused:true,paused_by:state.userId,paused_name:state.name||'anon',updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Pause failed (check table & policies).')}else{setPaused(true,state.userId,state.name||'anon');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'pause',by:state.userId,name:state.name||'anon'}})}})
-document.getElementById('unpauseBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,paused:false,paused_by:null,paused_name:null,updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Unpause failed (check table & policies).')}else{setPaused(false,null,null);state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'unpause'}})}})
-document.getElementById('clearBtn').addEventListener('click',async()=>{if(!state.admin)return;if(!confirm('Clear ALL messages in #'+state.room+'?'))return;const{error}=await supabase.from('messages').delete().eq('room',state.room);if(error){console.error(error);alert('Clear failed (need DELETE policy).')}else{clearUI();sys('Chat cleared.');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'clear'}})}})
-document.getElementById('discoBtn').addEventListener('click',()=>{if(!state.admin)return;const duration=10000;startDisco(duration);state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'disco',duration}})})
-els.fxPulse?.addEventListener('click',()=>{if(!state.admin)return;startPulse(8000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'pulse',duration:8000}})})
-els.fxShake?.addEventListener('click',()=>{if(!state.admin)return;startShake(5000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'shake',duration:5000}})})
-els.fxConfetti?.addEventListener('click',()=>{if(!state.admin)return;startConfetti(5000);state.roomChannel.send({type:'broadcast',event:'fx',payload:{fx:'confetti',duration:5000}})})
-document.getElementById('kickBtn').addEventListener('click',()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'kick',nick}});sys(`Kicked ${nick}`)})
-async function setMuted(nicks){const uniq=Array.from(new Set(nicks.map(norm))).filter(Boolean);const row={room:state.room,muted_nicks:uniq,paused:state.paused,paused_by:state.pausedBy,paused_name:state.pausedName,announcement_text:els.announceText.textContent||null,announcement_by:els.announceBy.textContent||null,announcement_at:els.announceText.textContent?new Date().toISOString():null,updated_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Failed to update mute list (check table & policies).')}}
-document.getElementById('muteBtn').addEventListener('click',async()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.mutedNicks.add(nick);updateMuteList();state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'muted',nick}});await setMuted(Array.from(state.mutedNicks))})
-document.getElementById('unmuteBtn').addEventListener('click',async()=>{if(!state.admin)return;const nick=norm(document.getElementById('targetNick').value);if(!nick)return alert('Enter a nickname');state.mutedNicks.delete(nick);updateMuteList();state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'unmuted',nick}});await setMuted(Array.from(state.mutedNicks))})
-document.getElementById('setAnnBtn').addEventListener('click',async()=>{if(!state.admin)return;const text=document.getElementById('announceInput').value.trim();if(!text)return alert('Type an announcement');const row={room:state.room,announcement_text:text,announcement_by:state.name||'admin',announcement_at:new Date().toISOString()};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Set announcement failed (check table & policies).')}else{renderAnnouncement(text,state.name||'admin',new Date());state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'announce',text,by:state.name||'admin'}})}})
-document.getElementById('clrAnnBtn').addEventListener('click',async()=>{if(!state.admin)return;const row={room:state.room,announcement_text:null,announcement_by:null,announcement_at:null};const{error}=await supabase.from('room_state').upsert(row,{onConflict:'room'});if(error){console.error(error);alert('Clear announcement failed')}else{renderAnnouncement('','','');state.roomChannel.send({type:'broadcast',event:'admin',payload:{type:'announce',text:'',by:''}})}})
-els.addBan.addEventListener('click',async()=>{if(!state.admin)return;const termRaw=els.banTerm.value.trim();if(!termRaw)return alert('Enter a term');const term=termRaw.toLowerCase();const{error}=await supabase.from('banned_terms').insert({term});if(error){console.error(error);alert('Failed to add term')}else{els.banTerm.value='';await loadBannedTerms()}})
-els.delBan.addEventListener('click',async()=>{if(!state.admin)return;const termRaw=els.banTerm.value.trim();if(!termRaw)return alert('Enter a term');const term=termRaw.toLowerCase();const{error}=await supabase.from('banned_terms').delete().eq('term',term);if(error){console.error(error);alert('Failed to remove term')}else{els.banTerm.value='';await loadBannedTerms()}})
-function renderSwatches(){els.colorRow.innerHTML='';COLORS.forEach(c=>{const d=document.createElement('div');d.className='swatch';d.style.background=c;d.dataset.c=c;if(state.color===c)d.classList.add('sel');d.addEventListener('click',()=>{state.color=c;localStorage.setItem('color',c);renderSwatches()});els.colorRow.appendChild(d)})}
-async function lookupUserIdByNick(nick){const{data}=await supabase.from('presence').select('user_id,name,updated_at');const target=(data||[]).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).find(r=>norm(r.name)===norm(nick));return target?target.user_id:null}
-async function refreshBannedList(){const{data}=await supabase.from('banned_users').select('user_id,name').order('created_at',{ascending:false});els.bannedList.textContent=(data&&data.length)?`Banned: ${data.map(r=>r.name||r.user_id).join(', ')}`:'Banned: (none)'}
-els.banBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid)return alert('User not found online.');const{error}=await supabase.from('banned_users').upsert({user_id:uid,name:nick});if(error){console.error(error);alert('Ban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'ban',user_id:uid}});await refreshBannedList();}})
-els.unbanBtn.addEventListener('click',async()=>{if(state.role!=='owner'){alert('Owner only');return}const nick=norm(els.banNick.value);if(!nick)return alert('Enter a nickname');let uid=await lookupUserIdByNick(nick);if(!uid){const{data}=await supabase.from('banned_users').select('user_id,name');const row=(data||[]).find(r=>norm(r.name)===nick);if(row)uid=row.user_id}if(!uid)return alert('Could not resolve user to unban');const{error}=await supabase.from('banned_users').delete().eq('user_id',uid);if(error){console.error(error);alert('Unban failed')}else{state.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unban',user_id:uid}});await refreshBannedList();}})
 
-function applyHoliday(id){
-  id = id || 'none';
-  state.holiday = id;
-
-  // Remove previous holiday classes
-  document.body.classList.forEach(c => {
-    if (c.startsWith('holiday-')) document.body.classList.remove(c);
-  });
-
-  if (id !== 'none') {
-    document.body.classList.add(`holiday-${id}`);
-  }
-
-  const labelEl = document.getElementById('holidayActive');
-  if (labelEl) {
-    const meta = HOLIDAYS[id] || { label:id, emoji:'' };
-    labelEl.textContent = id === 'none' ? 'off' : `${meta.emoji || ''} ${meta.label}`.trim();
-  }
+/* ===== UI helpers ===== */
+function setStatus(t){E.status.textContent=t}
+function sys(t){
+  const d=document.createElement('div')
+  d.className='sys'; d.textContent=t
+  E.messages.appendChild(d); E.messages.scrollTop=E.messages.scrollHeight
+}
+function showBlocker(){S.kicked=true;E.blocker.style.display='grid';updateComposerDisabled()}
+function clearUI(){E.messages.innerHTML='';rendered.clear()}
+function trimUI(){
+  const nodes=$$('.msg',E.messages)
+  for(let i=0;i<nodes.length-MAX_MSGS;i++) nodes[i].remove()
+  E.messages.scrollTop=E.messages.scrollHeight
+}
+function renderAnnouncement(text,by,at){
+  if(!text){E.announce.style.display='none';E.announceText.textContent='';E.announceBy.textContent='';E.announceAt.textContent='';return}
+  E.announce.style.display='block'
+  E.announceText.textContent=text
+  E.announceBy.textContent=by||'admin'
+  E.announceAt.textContent=at?new Date(at).toLocaleString():''
+}
+function setRole(role){
+  S.role=role; S.admin=(role==='admin'||role==='owner')
+  E.adminLocked.style.display=S.admin?'none':''
+  E.adminControls.style.display=S.admin?'block':'none'
+  E.ownerOnly.style.display=(role==='owner')?'block':'none'
+}
+function setPaused(paused,by=null,name=null){
+  S.paused=!!paused; S.pausedBy=by; S.pausedName=name
+  E.pauseState.textContent=S.paused?(S.pausedName?`paused by ${S.pausedName}`:'paused'):'active'
+  updateComposerDisabled()
+}
+function updateComposerDisabled(){
+  const blocked=(S.paused&&S.userId!==S.pausedBy)||S.kicked||S.banned||(S.muted.has(norm(S.name))&&!S.admin)
+  E.input.disabled=blocked; E.send.disabled=blocked
+  if(S.kicked) E.input.placeholder='You were kicked. Refresh to rejoin.'
+  else if(S.banned) E.input.placeholder='You are banned.'
+  else if(S.muted.has(norm(S.name))&&!S.admin) E.input.placeholder='You are muted.'
+  else if(S.paused&&S.userId!==S.pausedBy) E.input.placeholder='Chat is paused.'
+  else E.input.placeholder='Type a message… (Shift+Enter = newline)'
 }
 
-function initHolidayControls(){
-  const sel = document.getElementById('holidaySelect');
-  const applyBtn = document.getElementById('holidayApply');
-  const clearBtn = document.getElementById('holidayClear');
-
-  if (!sel || !applyBtn || !clearBtn) return;
-  if (sel._holidayInit) return;
-  sel._holidayInit = true;
-
-  sel.innerHTML = '';
-  Object.entries(HOLIDAYS).forEach(([id, cfg]) => {
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = (cfg.emoji ? cfg.emoji + ' ' : '') + cfg.label;
-    sel.appendChild(opt);
-  });
-  sel.value = state.holiday || 'none';
-  applyHoliday(state.holiday || 'none');
-
-  applyBtn.addEventListener('click', () => {
-    if (!state.admin) return;
-    const val = sel.value || 'none';
-    applyHoliday(val);
-    state.roomChannel?.send({
-      type:'broadcast',
-      event:'admin',
-      payload:{ type:'holiday', theme:val }
-    });
-  });
-
-  clearBtn.addEventListener('click', () => {
-    if (!state.admin) return;
-    sel.value = 'none';
-    applyHoliday('none');
-    state.roomChannel?.send({
-      type:'broadcast',
-      event:'admin',
-      payload:{ type:'holiday', theme:'none' }
-    });
-  });
-}
-
-async function joinRoom(newRoom){if(state.roomChannel){await supabase.removeChannel(state.roomChannel);state.roomChannel=null}clearUI();state.kicked=false;document.getElementById('blocker').style.display='none';state.room=(newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-');localStorage.setItem('room',state.room);els.roomInput.value=state.room;document.getElementById('roomNameLabel').textContent=state.room;state.roomChannel=supabase.channel(`room:${state.room}`,{config:{presence:{key:state.userId}}});state.roomChannel.on('presence',{event:'sync'},()=>{const pres=state.roomChannel.presenceState();const users=new Set();for(const k in pres){pres[k].forEach(v=>users.add(v.userId))}document.getElementById('online').textContent=`${users.size} online`});if(PERSIST){state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room=eq.${state.room}`},payload=>addIfNew(payload.new));state.roomChannel.on('postgres_changes',{event:'*',schema:'public',table:'room_state',filter:`room=eq.${state.room}`},payload=>{const row=payload.new||payload.old||{};setPaused(!!row.paused,row.paused_by||null,row.paused_name||null);state.mutedNicks=new Set((row.muted_nicks||[]).map(norm));updateMuteList();renderAnnouncement(row.announcement_text||'',row.announcement_by||'',row.announcement_at||'')});state.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({new:r})=>{const map=state.reactions.get(r.message_id)||{};map[r.emoji]=map[r.emoji]||new Set();map[r.emoji].add(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)});state.roomChannel.on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions',filter:`room=eq.${state.room}`},({old:r})=>{const map=state.reactions.get(r.message_id)||{};if(map[r.emoji])map[r.emoji].delete(r.user_id);state.reactions.set(r.message_id,map);renderReactions(r.message_id)})}
-state.roomChannel.on('broadcast',{event:'msg'},({payload})=>addIfNew(payload));state.roomChannel.on('broadcast',{event:'admin'},({payload})=>{
-  if(payload?.type==='clear'){clearUI();sys('Chat cleared by admin')}
-  if(payload?.type==='pause'){setPaused(true,payload.by||null,payload.name||'admin')}
-  if(payload?.type==='unpause'){setPaused(false,null,null)}
-  if(payload?.type==='disco'){startDisco(payload.duration||10000)}
-  if(payload?.type==='kick'&&norm(state.name)===norm(payload.nick)){showBlocker()}
-  if(payload?.type==='muted'){state.mutedNicks.add(norm(payload.nick));updateMuteList()}
-  if(payload?.type==='unmuted'){state.mutedNicks.delete(norm(payload.nick));updateMuteList()}
-  if(payload?.type==='announce'){renderAnnouncement(payload.text||'',payload.by||'admin',new Date().toISOString())}
-  if(payload?.type==='ban'&&payload.user_id===state.userId){state.banned=true;updateComposerDisabled();alert('You have been banned by the owner.');}
-  if(payload?.type==='unban'&&payload.user_id===state.userId){state.banned=false;updateComposerDisabled();sys('You were unbanned')}
-  if(payload?.type==='holiday'){applyHoliday(payload.theme || 'none')}
-});state.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{const id=payload.message_id;const map=state.reactions.get(id)||{};map[payload.emoji]=map[payload.emoji]||new Set();if(payload.op==='add')map[payload.emoji].add(payload.user_id);else map[payload.emoji].delete(payload.user_id);state.reactions.set(id,map);renderReactions(id)});state.roomChannel.on('broadcast',{event:'fx'},({payload})=>{if(payload.fx==='pulse')startPulse(payload.duration||8000);if(payload.fx==='shake')startShake(payload.duration||5000);if(payload.fx==='confetti')startConfetti(payload.duration||5000)});await state.roomChannel.subscribe(async s=>{if(s==='SUBSCRIBED'){state.roomChannel.track({userId:state.userId,name:state.name||'anon',room:state.room});await loadRecent();await loadRoomState();await loadBannedTerms();await checkBan();loadPins();renderSwatches();sys(`Joined #${state.room}`);await heartbeat();await refreshRooms();clearInterval(state.presenceTimer);state.presenceTimer=setInterval(async()=>{await heartbeat();},20000)}})}
-setStatus('Ready');document.getElementById('name').value=state.name;setRole('guest');renderSwatches();joinRoom(state.room);window.addEventListener('beforeunload',()=>{supabase.from('presence').delete().eq('user_id',state.userId)})
-const presenceChan=supabase.channel('presence-global');presenceChan.on('postgres_changes',{event:'*',schema:'public',table:'presence'},()=>{refreshRooms()});presenceChan.subscribe();setInterval(()=>{refreshRooms()},15000)
-/* ==== PART 2 — Games + Difficulty + Snake (<=200 lines) ==== */
-function setGameContent(node,cleanup){if(els.game.currentCleanup){try{els.game.currentCleanup()}catch{}els.game.currentCleanup=null}els.game.innerHTML='';els.game.appendChild(node);els.game.currentCleanup=cleanup||null}
-function diff(){const v=(els.diffSel?.value)||'normal';if(v==='easy')return{snakeSpeed:130,snakeSize:14,guessMax:50,memPairs:4};if(v==='hard')return{snakeSpeed:70,snakeSize:12,guessMax:500,memPairs:8};return{snakeSpeed:100,snakeSize:12,guessMax:100,memPairs:6}}
-function gameRPS(){const el=document.createElement('div'),out=document.createElement('div'),row=document.createElement('div');['Rock','Paper','Scissors'].forEach((t,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=()=>{const me=i,ai=Math.floor(Math.random()*3);const m=['🪨','📄','✂️'][me],a=['🪨','📄','✂️'][ai];const w=me===ai?'Draw':(me===0&&ai===2||me===1&&ai===0||me===2&&ai===1)?'You win!':'You lose';out.textContent=`You ${m} vs ${a} • ${w}`};row.appendChild(b)});el.append(row,out);setGameContent(el)}
-function gameTTT(){const el=document.createElement('div');el.className='ttt';let b=Array(9).fill(''),cells=[];const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];const win=bb=>{for(const[a,c,d]of L){if(bb[a]&&bb[a]===bb[c]&&bb[a]===bb[d])return bb[a]}return bb.every(x=>x)?'draw':null};const ai=()=>{let i=b.findIndex(x=>!x);if(i>-1){b[i]='O';cells[i].textContent='O'}};const click=i=>{if(b[i]||win(b))return;b[i]='X';cells[i].textContent='X';let r=win(b);if(r){el.querySelectorAll('button').forEach(x=>x.disabled=true);return}ai();r=win(b);if(r)el.querySelectorAll('button').forEach(x=>x.disabled=true)};for(let i=0;i<9;i++){const bt=document.createElement('button');bt.onclick=()=>click(i);cells.push(bt);el.appendChild(bt)}setGameContent(el)}
-function gameGuess(){const cfg=diff(),el=document.createElement('div'),inp=document.createElement('input'),btn=document.createElement('button'),out=document.createElement('div');let n=Math.floor(Math.random()*cfg.guessMax)+1,tries=0;inp.type='number';inp.placeholder=`1..${cfg.guessMax}`;inp.style.marginRight='8px';btn.className='btn';btn.textContent='Guess';btn.onclick=()=>{const v=+inp.value;if(!v)return;tries++;out.textContent=v===n?`Correct in ${tries}!`:(v<n?'Higher':'Lower')};el.append(inp,btn,out);setGameContent(el)}
-function gameMem(){const cfg=diff(),el=document.createElement('div');el.className='mem';const pool=['🍎','🍌','🍇','🍓','🍑','🍍','🥝','🥕','🌽','🍆','🥦','🥑'];const faces=pool.slice(0,cfg.memPairs);let arr=faces.concat(faces).sort(()=>Math.random()-.5),picks=[],matched=new Set();arr.forEach((f,i)=>{const b=document.createElement('button');b.textContent='?';b.onclick=()=>{if(matched.has(i)||picks.includes(i))return;b.textContent=f;picks.push(i);if(picks.length===2){const[a,c]=picks;setTimeout(()=>{if(arr[a]===arr[c]){matched.add(a);matched.add(c)}else{el.children[a].textContent='?';el.children[c].textContent='?'}picks=[];if(matched.size===arr.length)els.game.innerHTML='You matched all!'},400)}};el.appendChild(b)});setGameContent(el)}
-function gameReact(){const box=document.createElement('div');box.style.cssText='width:100%;height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;user-select:none';const btn=document.createElement('button');btn.className='btn';btn.textContent='Start';const out=document.createElement('div');out.style.marginLeft='10px';let t=null,armed=false,timer=null,early=false;const reset=()=>{armed=false;early=false;box.style.background='transparent';btn.disabled=false;btn.textContent='Start';out.textContent=''};btn.onclick=()=>{btn.disabled=true;out.textContent='Wait for green…';box.style.background='#5b1b1b';timer=setTimeout(()=>{box.style.background='#1b5b2a';t=performance.now();armed=true;out.textContent='Click!'},800+Math.random()*2000)};const handle=()=>{if(!btn.disabled)return;if(early){reset();return}if(!armed){out.textContent='Too soon!';early=true;clearTimeout(timer);setTimeout(reset,800);return}out.textContent=`${Math.round(performance.now()-t)} ms`;setTimeout(reset,800)};box.onclick=handle;btn.addEventListener('click',e=>e.stopPropagation());const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.alignItems='center';wrap.append(btn,out);const root=document.createElement('div');root.append(wrap,box);setGameContent(root)}
-function gameSnake(){const cfg=diff(),wrap=document.createElement('div');wrap.style.cssText='width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center';const canvas=document.createElement('canvas');const H=240,SIZE=cfg.snakeSize,W=Math.min(els.game.clientWidth-20,820);canvas.width=Math.floor(W/SIZE)*SIZE;canvas.height=Math.floor(H/SIZE)*SIZE;canvas.style.cssText='background:#111a2e;border-radius:10px;border:1px solid rgba(255,255,255,.2)';const hint=document.createElement('div');hint.className='hint';hint.style.marginTop='8px';hint.textContent='Arrows/WASD • Space to restart';wrap.append(canvas,hint);const ctx=canvas.getContext('2d');let dir={x:1,y:0},nextDir={x:1,y:0},snake=[{x:4,y:4},{x:3,y:4},{x:2,y:4}],food=spawn(),timer=null,over=false;function spawn(){const cx=canvas.width/SIZE,cy=canvas.height/SIZE;let p;do{p={x:Math.floor(Math.random()*cx),y:Math.floor(Math.random()*cy)}}while(snake.some(s=>s.x===p.x&&s.y===p.y));return p}function cell(x,y,c){ctx.fillStyle=c;ctx.fillRect(x*SIZE,y*SIZE,SIZE-1,SIZE-1)}function render(){ctx.clearRect(0,0,canvas.width,canvas.height);cell(food.x,food.y,'#f59e0b');snake.forEach((s,i)=>cell(s.x,s.y,i?'#22d3ee':'#34d399'))}function tick(){dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y},cx=canvas.width/SIZE,cy=canvas.height/SIZE;if(head.x<0||head.y<0||head.x>=cx||head.y>=cy||snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return}snake.unshift(head);if(head.x===food.x&&head.y===food.y){food=spawn()}else snake.pop();render()}function gameOver(){over=true;clearInterval(timer);ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.font='bold 20px system-ui,sans-serif';ctx.fillText('Game Over — Space',16,28)}function onKey(e){const k=e.key.toLowerCase();if(k==='arrowup'||k==='w'){if(dir.y!==1)nextDir={x:0,y:-1}}else if(k==='arrowdown'||k==='s'){if(dir.y!==-1)nextDir={x:0,y:1}}else if(k==='arrowleft'||k==='a'){if(dir.x!==1)nextDir={x:-1,y:0}}else if(k==='arrowright'||k==='d'){if(dir.x!==-1)nextDir={x:1,y:0}}else if(k===' '&&over){over=false;dir={x:1,y:0};nextDir=dir;snake=[{x:4,y:4},{x:3,y:4},{x:2,y:4}];food=spawn();clearInterval(timer);timer=setInterval(tick,cfg.snakeSpeed);render()}}window.addEventListener('keydown',onKey);timer=setInterval(tick,cfg.snakeSpeed);render();const cleanup=()=>{window.removeEventListener('keydown',onKey);clearInterval(timer)};setGameContent(wrap,cleanup)}
-function loadGame(k){try{state.currentGame=k}catch{}if(k==='rps')gameRPS();else if(k==='ttt')gameTTT();else if(k==='guess')gameGuess();else if(k==='mem')gameMem();else if(k==='react')gameReact();else if(k==='snake')gameSnake()}
-els.gameSel.addEventListener('change',e=>loadGame(e.target.value));els.diffSel?.addEventListener('change',()=>loadGame((state&&state.currentGame)||els.gameSel.value));try{loadGame(els.gameSel.value)}catch{}
-/* ==== PART 3 — messaging wiring & small fixes (<=200 lines) ==== */
-function bindMessagingControls(){
-  if (els._bound) return; els._bound = true;
-
-  // Send on button click
-  els.send.addEventListener('click', send);
-
-  // Send on Enter (Shift+Enter = newline)
-  els.input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      send();
+/* ===== Colors ===== */
+function renderSwatches(){
+  E.colorRow.innerHTML=''
+  COLORS.forEach(c=>{
+    const d=document.createElement('div')
+    d.className='swatch'+(S.color===c?' sel':'')
+    d.style.background=c
+    d.title=c
+    d.onclick=()=>{
+      S.color=c
+      localStorage.setItem('color',c)
+      renderSwatches()
     }
-  });
-
-  // Join room by button or Enter in input
-  els.switchRoom.addEventListener('click', () => joinRoom(els.roomInput.value));
-  els.roomInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') joinRoom(els.roomInput.value);
-  });
-
-  // Keep nickname & color persisted
-  els.name.addEventListener('change', () => {
-    const n = (els.name.value || 'anon').slice(0, 20);
-    els.name.value = n;
-    state.name = n;
-    localStorage.setItem('nickname', n);
-    updateComposerDisabled();
-    heartbeat().catch(()=>{});
-  });
-
-  // Make sure composer state reflects current role/room flags
-  updateComposerDisabled();
-
-  // Owner list refresh at boot
-  refreshBannedList().catch(()=>{});
-
-  // Festive controls
-  initHolidayControls();
-
-  // Status helpers
-  window.addEventListener('online',  () => setStatus('Online'));
-  window.addEventListener('offline', () => setStatus('Offline'));
+    E.colorRow.appendChild(d)
+  })
 }
 
-// In case PARTs load out-of-order, retry binding until DOM is ready
-(function ensureBound(){
-  try { bindMessagingControls(); } catch { /* ignore */ }
-  setTimeout(ensureBound, 300);
-})();
+/* ===== Moderation ===== */
+const collapseRepeats=t=>{let o='',p='',c=0;for(const ch of t){if(ch===p){c++;if(c<=2)o+=ch}else{p=ch;c=1;o+=ch}}return o}
+const modNorm=s=>{
+  if(!s) return ''
+  let t=s.toLowerCase()
+  t=t.replace(/[@]/g,'a').replace(/[0]/g,'o').replace(/[1l!]/g,'i').replace(/[3]/g,'e').replace(/[4]/g,'a').replace(/[5$]/g,'s').replace(/[7]/g,'t')
+  t=t.replace(/[^a-z0-9]+/g,'')
+  return collapseRepeats(t)
+}
+const violates=text=>{
+  const n=modNorm(text)
+  for(const term of S.bannedTerms) if(n.includes(term)) return true
+  return false
+}
+const mask=text=>violates(text)?'🚫 [filtered]':text
 
-/* Optional debug helpers — comment out if you like */
-window.__chatDebug = {
-  state,
-  pause(){ setPaused(true, state.userId, state.name||'admin'); },
-  unpause(){ setPaused(false, null, null); },
-  blocked(){ return {
-    paused: state.paused && state.userId !== state.pausedBy,
-    kicked: state.kicked,
-    muted: state.mutedNicks.has((state.name||'').trim().toLowerCase()),
-    banned: state.banned
-  };}
-};
+/* ===== Notifications ===== */
+async function ensureNotifPermission(){
+  if(!('Notification' in window)) return false
+  if(Notification.permission==='granted') return true
+  if(Notification.permission==='denied') return false
+  const p=await Notification.requestPermission()
+  return p==='granted'
+}
+function notify(title, body){
+  const now=Date.now()
+  if(now - S.lastNotifyAt < 1200) return
+  S.lastNotifyAt=now
+  try{
+    const n=new Notification(title,{body,tag:'room-'+S.room})
+    n.onclick=()=>{window.focus(); n.close()}
+  }catch{}
+}
+function saveNotifySets(){
+  localStorage.setItem('notifyRooms', JSON.stringify([...S.notifyRooms]))
+  localStorage.setItem('notifyJoinsRooms', JSON.stringify([...S.notifyJoinsRooms]))
+}
+function syncNotifToggles(){
+  E.notifToggle.checked=S.notifyRooms.has(S.room)
+  E.joinToggle.checked=S.notifyJoinsRooms.has(S.room)
+}
 
+/* ===== Reactions ===== */
+function renderReactions(id){
+  const wrap=$(`.msg[data-id="${CSS.escape(id)}"]`,E.messages)
+  if(!wrap) return
+  const map=S.reactions.get(id)||{}
+  $$('.rxn',wrap).forEach(node=>{
+    const emo=node.dataset.emoji
+    const set=map[emo]||new Set()
+    node.textContent=`${emo}${set.size?` ${set.size}`:''}`
+    node.classList.toggle('mine', set.has(S.userId))
+  })
+}
+async function toggleReaction(messageId, emoji){
+  const map=S.reactions.get(messageId)||{}
+  map[emoji]=map[emoji]||new Set()
+  const has=map[emoji].has(S.userId)
+
+  if(has){
+    map[emoji].delete(S.userId)
+    S.reactions.set(messageId,map); renderReactions(messageId)
+    await supabase.from('message_reactions').delete().match({room:S.room,message_id:messageId,emoji,user_id:S.userId})
+    S.roomChannel?.send({type:'broadcast',event:'rxn',payload:{op:'del',message_id:messageId,emoji,user_id:S.userId}})
+  }else{
+    map[emoji].add(S.userId)
+    S.reactions.set(messageId,map); renderReactions(messageId)
+    await supabase.from('message_reactions').insert({room:S.room,message_id:messageId,emoji,user_id:S.userId})
+    S.roomChannel?.send({type:'broadcast',event:'rxn',payload:{op:'add',message_id:messageId,emoji,user_id:S.userId}})
+  }
+}
+
+/* ===== Messages ===== */
+function renderMsg(m){
+  const id=msgKey(m), mine=m.user_id===S.userId
+  const color = m.color || ''
+  const wrap=document.createElement('div')
+  wrap.className='msg'+(mine?' me':'')
+  wrap.dataset.id=id
+  wrap.innerHTML=`
+    <div class="meta"><strong>${esc(m.name||'anon')}</strong> · ${new Date(m.created_at||Date.now()).toLocaleString()}${mine?' · you':''}</div>
+    <div class="text" style="color:${esc(color)}">${esc(mask(m.text))}</div>
+    <div class="reactions">${REACTIONS.map(e=>`<span class="rxn" data-emoji="${esc(e)}">${esc(e)}</span>`).join('')}</div>
+  `
+  E.messages.appendChild(wrap)
+  renderReactions(id)
+}
+function addIfNew(m){
+  const k=msgKey(m); if(rendered.has(k)) return
+  rendered.add(k); renderMsg(m); trimUI()
+}
+
+/* Delegated clicks (reactions + pinning) */
+E.messages.addEventListener('click', e=>{
+  const rxn=e.target.closest('.rxn'); if(!rxn) return
+  const msg=e.target.closest('.msg'); if(!msg) return
+  toggleReaction(msg.dataset.id, rxn.dataset.emoji).catch(console.error)
+})
+E.messages.addEventListener('dblclick', e=>{
+  const msg=e.target.closest('.msg'); if(!msg) return
+  const id=msg.dataset.id
+  const who=$('.meta strong',msg)?.textContent||'anon'
+  const text=$('.text',msg)?.textContent||''
+  pinAdd({id,name:who,text,created_at:nowIso()})
+})
+
+/* ===== Pins ===== */
+const pinsKey=()=>`pins:${S.room}`
+function pinsLoad(){ try{S.pins=JSON.parse(localStorage.getItem(pinsKey())||'[]')}catch{S.pins=[]}; pinsRender() }
+function pinsSave(){ localStorage.setItem(pinsKey(), JSON.stringify(S.pins)) }
+function pinsRender(){
+  E.pinList.innerHTML=''
+  if(!S.pins.length){E.pinList.innerHTML=`<div class="small">No pins yet</div>`;return}
+  for(const p of S.pins){
+    const d=document.createElement('div')
+    d.className='msg'
+    d.dataset.pin=p.id
+    d.innerHTML=`<div class="meta"><strong>${esc(p.name)}</strong> · ${new Date(p.created_at).toLocaleString()}</div><div class="text">${esc(p.text)}</div>`
+    d.title='Double-click to unpin'
+    d.ondblclick=()=>pinRemove(p.id)
+    E.pinList.appendChild(d)
+  }
+}
+function pinAdd(p){
+  if(S.pins.find(x=>x.id===p.id)) return
+  if(S.pins.length>=5) return alert('Pin board is full (max 5). Double-click a pin to remove.')
+  S.pins.push(p); pinsSave(); pinsRender()
+}
+function pinRemove(id){S.pins=S.pins.filter(p=>p.id!==id); pinsSave(); pinsRender()}
+
+/* ===== Presence / Rooms ===== */
+async function heartbeat(){
+  await supabase.from('presence').upsert({user_id:S.userId,name:S.name||'anon',room:S.room,updated_at:nowIso()})
+}
+async function refreshRooms(){
+  const cutoff=new Date(Date.now()-90*1000).toISOString()
+
+  const {data:all}=await supabase.from('presence').select('user_id').gt('updated_at',cutoff)
+  E.globalOnline.textContent=`${new Set((all||[]).map(r=>r.user_id)).size} online (global)`
+
+  const {data:rooms}=await supabase.from('presence').select('room,user_id').gt('updated_at',cutoff)
+  const counts=new Map()
+  for(const r of (rooms||[])){
+    if(!counts.has(r.room)) counts.set(r.room,new Set())
+    counts.get(r.room).add(r.user_id)
+  }
+  E.roomsList.innerHTML=''
+  ;[...counts.entries()].sort((a,b)=>b[1].size-a[1].size).forEach(([room,set])=>{
+    const d=document.createElement('span')
+    d.className='roomPill'
+    d.textContent=`#${room} · ${set.size}`
+    d.onclick=()=>joinRoom(room)
+    E.roomsList.appendChild(d)
+  })
+  E.roomsUpdated.textContent=new Date().toLocaleTimeString()
+}
+
+/* ===== Room state ===== */
+async function loadRoomState(){
+  const {data}=await supabase.from('room_state')
+    .select('paused,paused_by,paused_name,muted_nicks,announcement_text,announcement_by,announcement_at')
+    .eq('room',S.room).maybeSingle()
+
+  setPaused(!!data?.paused, data?.paused_by||null, data?.paused_name||null)
+  S.muted=new Set((data?.muted_nicks||[]).map(norm))
+  E.muteList.textContent=S.muted.size?`Muted: ${[...S.muted].join(', ')}`:'Muted: (none)'
+  renderAnnouncement(data?.announcement_text||'', data?.announcement_by||'', data?.announcement_at||'')
+}
+async function upsertRoomState(partial){
+  const base={
+    room:S.room,
+    paused:S.paused, paused_by:S.pausedBy, paused_name:S.pausedName,
+    muted_nicks:[...S.muted],
+    announcement_text:E.announceText.textContent||null,
+    announcement_by:E.announceBy.textContent||null,
+    announcement_at:E.announceText.textContent?nowIso():null,
+    updated_at:nowIso()
+  }
+  const {error}=await supabase.from('room_state').upsert({...base,...partial},{onConflict:'room'})
+  if(error) throw error
+}
+
+/* ===== Banned terms / banned users ===== */
+async function loadBannedTerms(){
+  const {data}=await supabase.from('banned_terms').select('term')
+  S.bannedTerms=new Set((data||[]).map(r=>norm(r.term)))
+  E.banList.textContent=S.bannedTerms.size?`Banned terms: ${[...S.bannedTerms].join(', ')}`:'Banned terms: (none)'
+}
+async function checkBan(){
+  const {data}=await supabase.from('banned_users').select('user_id').eq('user_id',S.userId).maybeSingle()
+  S.banned=!!data; updateComposerDisabled()
+}
+async function lookupUserIdByNick(nick){
+  const {data}=await supabase.from('presence').select('user_id,name,updated_at')
+  return (data||[]).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).find(r=>norm(r.name)===norm(nick))?.user_id||null
+}
+async function refreshBannedList(){
+  const {data}=await supabase.from('banned_users').select('user_id,name').order('created_at',{ascending:false})
+  E.bannedList.textContent=(data?.length)?`Banned: ${data.map(r=>r.name||r.user_id).join(', ')}`:'Banned: (none)'
+}
+
+/* ===== History / reactions ===== */
+async function loadReactionsFor(ids){
+  if(!ids.length) return
+  const {data}=await supabase.from('message_reactions')
+    .select('message_id,emoji,user_id').eq('room',S.room).in('message_id',ids)
+  for(const r of (data||[])){
+    const map=S.reactions.get(r.message_id)||{}
+    map[r.emoji]=map[r.emoji]||new Set()
+    map[r.emoji].add(r.user_id)
+    S.reactions.set(r.message_id,map)
+  }
+  ids.forEach(renderReactions)
+}
+async function loadRecent(){
+  if(!PERSIST) return
+  clearUI()
+  const {data,error}=await supabase.from('messages').select('*')
+    .eq('room',S.room).order('created_at',{ascending:false}).limit(MAX_MSGS)
+  if(error){console.error(error);return sys('Failed to load history')}
+  const list=(data||[]).reverse()
+  list.forEach(addIfNew)
+  await loadReactionsFor(list.map(msgKey))
+}
+
+/* ===== Send ===== */
+async function send(){
+  const text=(E.input.value||'').trim()
+  if(!text) return
+  if(text.length>300) return alert('Max 300 characters')
+  if(S.kicked) return alert('You were kicked. Refresh to rejoin.')
+  if(S.banned) return alert('You are banned.')
+  if(S.muted.has(norm(S.name))&&!S.admin) return alert('You are muted.')
+  if(S.paused&&S.userId!==S.pausedBy) return alert(`Chat is paused by ${S.pausedName||'admin'}.`)
+  if(violates(text)) return alert('Message blocked by moderation.')
+
+  const name=(E.name.value||'anon').slice(0,20)
+  E.name.value=name; S.name=name
+  localStorage.setItem('nickname',name)
+  localStorage.setItem('uid',S.userId)
+
+  const msg={room:S.room,user_id:S.userId,name,text,created_at:nowIso(),color:S.color}
+  E.input.value=''
+  S.roomChannel?.send({type:'broadcast',event:'msg',payload:msg})
+  addIfNew(msg)
+
+  if(PERSIST){
+    const {error}=await supabase.from('messages').insert(msg)
+    if(error) console.error(error)
+  }
+}
+
+/* ===== Holiday ===== */
+function applyHoliday(id='none'){
+  S.holiday=id
+  localStorage.setItem('holiday',id)
+  document.body.classList.forEach(c=>{ if(c.startsWith('holiday-')) document.body.classList.remove(c) })
+  if(id!=='none') document.body.classList.add(`holiday-${id}`)
+  const meta=HOLIDAYS[id]||{label:id,emoji:''}
+  E.holidayActive.textContent=id==='none'?'off':`${meta.emoji} ${meta.label}`.trim()
+}
+function initHoliday(){
+  E.holidaySelect.innerHTML=Object.entries(HOLIDAYS).map(([id,cfg])=>
+    `<option value="${esc(id)}">${esc((cfg.emoji?cfg.emoji+' ':'')+cfg.label)}</option>`
+  ).join('')
+  E.holidaySelect.value=S.holiday
+  applyHoliday(S.holiday)
+}
+
+/* ===== Join room ===== */
+async function joinRoom(newRoom){
+  newRoom=(newRoom||'global').toLowerCase().replace(/[^a-z0-9_-]/g,'-')
+
+  if(S.roomChannel){ await supabase.removeChannel(S.roomChannel); S.roomChannel=null }
+  clearUI(); S.kicked=false; E.blocker.style.display='none'
+
+  S.room=newRoom
+  localStorage.setItem('room',S.room)
+  E.roomInput.value=S.room
+  E.roomNameLabel.textContent=S.room
+  pinsLoad()
+  syncNotifToggles()
+  S.lastPresenceCount=0
+
+  S.roomChannel=supabase.channel(`room:${S.room}`,{config:{presence:{key:S.userId}}})
+
+  S.roomChannel.on('presence',{event:'sync'},async()=>{
+    const pres=S.roomChannel.presenceState()
+    const users=new Set()
+    for(const k in pres) pres[k].forEach(v=>users.add(v.userId))
+    const count=users.size
+    E.online.textContent=`${count} online`
+
+    if(S.notifyJoinsRooms.has(S.room) && count>S.lastPresenceCount){
+      const ok=await ensureNotifPermission()
+      if(ok) notify(`#${S.room}`, `Someone joined (${count} online)`)
+    }
+    S.lastPresenceCount=count
+  })
+
+  if(PERSIST){
+    S.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room=eq.${S.room}`},p=>{
+      addIfNew(p.new)
+      const m=p.new
+      if(S.notifyRooms.has(S.room) && m?.user_id!==S.userId){
+        ensureNotifPermission().then(ok=>{
+          if(ok) notify(`#${S.room}`, `${m.name||'anon'}: ${(m.text||'').slice(0,90)}`)
+        })
+      }
+    })
+
+    S.roomChannel.on('postgres_changes',{event:'*',schema:'public',table:'room_state',filter:`room=eq.${S.room}`},p=>{
+      const row=p.new||p.old||{}
+      setPaused(!!row.paused,row.paused_by||null,row.paused_name||null)
+      S.muted=new Set((row.muted_nicks||[]).map(norm))
+      E.muteList.textContent=S.muted.size?`Muted: ${[...S.muted].join(', ')}`:'Muted: (none)'
+      renderAnnouncement(row.announcement_text||'',row.announcement_by||'',row.announcement_at||'')
+    })
+
+    S.roomChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:`room=eq.${S.room}`},({new:r})=>{
+      const map=S.reactions.get(r.message_id)||{}
+      map[r.emoji]=map[r.emoji]||new Set()
+      map[r.emoji].add(r.user_id)
+      S.reactions.set(r.message_id,map)
+      renderReactions(r.message_id)
+    })
+    S.roomChannel.on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions',filter:`room=eq.${S.room}`},({old:r})=>{
+      const map=S.reactions.get(r.message_id)||{}
+      map[r.emoji]?.delete(r.user_id)
+      S.reactions.set(r.message_id,map)
+      renderReactions(r.message_id)
+    })
+  }
+
+  S.roomChannel.on('broadcast',{event:'msg'},({payload})=>{
+    addIfNew(payload)
+    if(S.notifyRooms.has(S.room) && payload?.user_id!==S.userId){
+      ensureNotifPermission().then(ok=>{
+        if(ok) notify(`#${S.room}`, `${payload.name||'anon'}: ${(payload.text||'').slice(0,90)}`)
+      })
+    }
+  })
+  S.roomChannel.on('broadcast',{event:'rxn'},({payload})=>{
+    const id=payload.message_id
+    const map=S.reactions.get(id)||{}
+    map[payload.emoji]=map[payload.emoji]||new Set()
+    payload.op==='add'?map[payload.emoji].add(payload.user_id):map[payload.emoji].delete(payload.user_id)
+    S.reactions.set(id,map); renderReactions(id)
+  })
+  S.roomChannel.on('broadcast',{event:'admin'},({payload})=>{
+    if(!payload) return
+    if(payload.type==='clear'){clearUI();sys('Chat cleared by admin')}
+    if(payload.type==='pause') setPaused(true,payload.by||null,payload.name||'admin')
+    if(payload.type==='unpause') setPaused(false,null,null)
+    if(payload.type==='kick' && norm(S.name)===norm(payload.nick)) showBlocker()
+    if(payload.type==='muted'){S.muted.add(norm(payload.nick));E.muteList.textContent=`Muted: ${[...S.muted].join(', ')}`;updateComposerDisabled()}
+    if(payload.type==='unmuted'){S.muted.delete(norm(payload.nick));E.muteList.textContent=S.muted.size?`Muted: ${[...S.muted].join(', ')}`:'Muted: (none)';updateComposerDisabled()}
+    if(payload.type==='announce') renderAnnouncement(payload.text||'',payload.by||'admin',nowIso())
+    if(payload.type==='ban' && payload.user_id===S.userId){S.banned=true;updateComposerDisabled();alert('You have been banned by the owner.')}
+    if(payload.type==='unban' && payload.user_id===S.userId){S.banned=false;updateComposerDisabled();sys('You were unbanned')}
+    if(payload.type==='holiday') applyHoliday(payload.theme||'none')
+  })
+
+  await S.roomChannel.subscribe(async st=>{
+    if(st!=='SUBSCRIBED') return
+    S.roomChannel.track({userId:S.userId,name:S.name||'anon',room:S.room})
+    await loadRecent()
+    await loadRoomState()
+    await loadBannedTerms()
+    await checkBan()
+    initHoliday()
+    renderSwatches()
+    sys(`Joined #${S.room}`)
+    await heartbeat()
+    await refreshRooms()
+    clearInterval(S.presenceTimer)
+    S.presenceTimer=setInterval(()=>heartbeat().catch(()=>{}),20000)
+  })
+}
+
+/* ===== Wire controls ===== */
+function roleFromPass(p){
+  p=(p||'').trim(); if(!p) return null
+  if(p.toLowerCase()===OWNER_PASS.toLowerCase()) return 'owner'
+  if(p.toLowerCase()===ADMIN_PASS.toLowerCase()) return 'admin'
+  return null
+}
+E.unlock.onclick=()=>{const r=roleFromPass(E.pass.value); r?(setRole(r),E.pass.value='',refreshBannedList().catch(()=>{})):alert('Wrong passcode')}
+E.pass.addEventListener('keydown',e=>{if(e.key==='Enter')E.unlock.click()})
+
+E.send.onclick=send
+E.input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}})
+E.switchRoom.onclick=()=>joinRoom(E.roomInput.value)
+E.roomInput.addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom(E.roomInput.value)})
+
+E.name.value=S.name
+E.name.addEventListener('change',()=>{
+  const n=(E.name.value||'anon').slice(0,20)
+  E.name.value=n; S.name=n
+  localStorage.setItem('nickname',n)
+  updateComposerDisabled()
+  heartbeat().catch(()=>{})
+})
+
+E.notifToggle.addEventListener('change', async ()=>{
+  const on=E.notifToggle.checked
+  if(on){
+    const ok=await ensureNotifPermission()
+    if(!ok){E.notifToggle.checked=false;return alert('Notifications are blocked in your browser settings.')}
+    S.notifyRooms.add(S.room)
+  }else S.notifyRooms.delete(S.room)
+  saveNotifySets()
+})
+E.joinToggle.addEventListener('change', async ()=>{
+  const on=E.joinToggle.checked
+  if(on){
+    const ok=await ensureNotifPermission()
+    if(!ok){E.joinToggle.checked=false;return alert('Notifications are blocked in your browser settings.')}
+    S.notifyJoinsRooms.add(S.room)
+  }else S.notifyJoinsRooms.delete(S.room)
+  saveNotifySets()
+})
+
+E.pauseBtn.onclick=async()=>{
+  if(!S.admin) return
+  try{
+    await upsertRoomState({paused:true,paused_by:S.userId,paused_name:S.name||'anon'})
+    setPaused(true,S.userId,S.name||'anon')
+    S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'pause',by:S.userId,name:S.name||'anon'}})
+  }catch(e){console.error(e);alert('Pause failed (check table & policies).')}
+}
+E.unpauseBtn.onclick=async()=>{
+  if(!S.admin) return
+  try{
+    await upsertRoomState({paused:false,paused_by:null,paused_name:null})
+    setPaused(false,null,null)
+    S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unpause'}})
+  }catch(e){console.error(e);alert('Unpause failed (check table & policies).')}
+}
+E.clearBtn.onclick=async()=>{
+  if(!S.admin) return
+  if(!confirm(`Clear ALL messages in #${S.room}?`)) return
+  const {error}=await supabase.from('messages').delete().eq('room',S.room)
+  if(error){console.error(error);return alert('Clear failed (need DELETE policy).')}
+  clearUI(); sys('Chat cleared.')
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'clear'}})
+}
+E.kickBtn.onclick=()=>{
+  if(!S.admin) return
+  const nick=norm(E.targetNick.value); if(!nick) return alert('Enter a nickname')
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'kick',nick}})
+  sys(`Kicked ${nick}`)
+}
+E.muteBtn.onclick=async()=>{
+  if(!S.admin) return
+  const nick=norm(E.targetNick.value); if(!nick) return alert('Enter a nickname')
+  S.muted.add(nick); E.muteList.textContent=`Muted: ${[...S.muted].join(', ')}`
+  updateComposerDisabled()
+  try{ await upsertRoomState({muted_nicks:[...S.muted]}) }catch(e){console.error(e);alert('Failed to update mute list.')}
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'muted',nick}})
+}
+E.unmuteBtn.onclick=async()=>{
+  if(!S.admin) return
+  const nick=norm(E.targetNick.value); if(!nick) return alert('Enter a nickname')
+  S.muted.delete(nick); E.muteList.textContent=S.muted.size?`Muted: ${[...S.muted].join(', ')}`:'Muted: (none)'
+  updateComposerDisabled()
+  try{ await upsertRoomState({muted_nicks:[...S.muted]}) }catch(e){console.error(e);alert('Failed to update mute list.')}
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unmuted',nick}})
+}
+E.setAnnBtn.onclick=async()=>{
+  if(!S.admin) return
+  const text=(E.announceInput.value||'').trim(); if(!text) return alert('Type an announcement')
+  try{
+    await supabase.from('room_state').upsert({room:S.room,announcement_text:text,announcement_by:S.name||'admin',announcement_at:nowIso()},{onConflict:'room'})
+    renderAnnouncement(text,S.name||'admin',nowIso())
+    S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'announce',text,by:S.name||'admin'}})
+  }catch(e){console.error(e);alert('Set announcement failed.')}
+}
+E.clrAnnBtn.onclick=async()=>{
+  if(!S.admin) return
+  try{
+    await supabase.from('room_state').upsert({room:S.room,announcement_text:null,announcement_by:null,announcement_at:null},{onConflict:'room'})
+    renderAnnouncement('','','')
+    S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'announce',text:'',by:''}})
+  }catch(e){console.error(e);alert('Clear announcement failed.')}
+}
+E.addBan.onclick=async()=>{
+  if(!S.admin) return
+  const term=(E.banTerm.value||'').trim().toLowerCase(); if(!term) return alert('Enter a term')
+  const {error}=await supabase.from('banned_terms').insert({term})
+  if(error){console.error(error);return alert('Failed to add term')}
+  E.banTerm.value=''; await loadBannedTerms()
+}
+E.delBan.onclick=async()=>{
+  if(!S.admin) return
+  const term=(E.banTerm.value||'').trim().toLowerCase(); if(!term) return alert('Enter a term')
+  const {error}=await supabase.from('banned_terms').delete().eq('term',term)
+  if(error){console.error(error);return alert('Failed to remove term')}
+  E.banTerm.value=''; await loadBannedTerms()
+}
+E.holidayApply.onclick=()=>{
+  if(!S.admin) return
+  const val=E.holidaySelect.value||'none'
+  applyHoliday(val)
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'holiday',theme:val}})
+}
+E.holidayClear.onclick=()=>{
+  if(!S.admin) return
+  E.holidaySelect.value='none'
+  applyHoliday('none')
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'holiday',theme:'none'}})
+}
+E.banBtn.onclick=async()=>{
+  if(S.role!=='owner') return alert('Owner only')
+  const nick=norm(E.banNick.value); if(!nick) return alert('Enter a nickname')
+  const uid=await lookupUserIdByNick(nick); if(!uid) return alert('User not found online.')
+  const {error}=await supabase.from('banned_users').upsert({user_id:uid,name:nick})
+  if(error){console.error(error);return alert('Ban failed')}
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'ban',user_id:uid}})
+  await refreshBannedList()
+}
+E.unbanBtn.onclick=async()=>{
+  if(S.role!=='owner') return alert('Owner only')
+  const nick=norm(E.banNick.value); if(!nick) return alert('Enter a nickname')
+  let uid=await lookupUserIdByNick(nick)
+  if(!uid){
+    const {data}=await supabase.from('banned_users').select('user_id,name')
+    uid=(data||[]).find(r=>norm(r.name)===nick)?.user_id||null
+  }
+  if(!uid) return alert('Could not resolve user to unban')
+  const {error}=await supabase.from('banned_users').delete().eq('user_id',uid)
+  if(error){console.error(error);return alert('Unban failed')}
+  S.roomChannel?.send({type:'broadcast',event:'admin',payload:{type:'unban',user_id:uid}})
+  await refreshBannedList()
+}
+
+/* ===== Boot ===== */
+setRole('guest')
+setStatus('Ready')
+E.roomInput.value=S.room
+E.name.value=S.name
+syncNotifToggles()
+initHoliday()
+renderSwatches()
+updateComposerDisabled()
+
+joinRoom(S.room).catch(console.error)
+
+window.addEventListener('beforeunload',()=>{ supabase.from('presence').delete().eq('user_id',S.userId) })
+
+const presenceChan=supabase.channel('presence-global')
+presenceChan.on('postgres_changes',{event:'*',schema:'public',table:'presence'},()=>refreshRooms().catch(()=>{}))
+presenceChan.subscribe()
+setInterval(()=>refreshRooms().catch(()=>{}),15000)
+
+window.addEventListener('online', ()=>setStatus('Online'))
+window.addEventListener('offline',()=>setStatus('Offline'))
 </script>
 </body>
 </html>
